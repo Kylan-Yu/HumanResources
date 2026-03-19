@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hrms.contract.mapper.ContractRecordMapper">
+
+    <!-- 根据合同ID查询合同记录 -->
+    <select id="selectRecordsByContractId" resultType="com.hrms.contract.vo.ContractRecordVO">
+        SELECT 
+            r.id, r.contract_id, r.record_type, r.old_value, r.new_value,
+            r.change_reason, r.operator_id, r.operator_name, r.created_time
+        FROM hr_contract_record r
+        WHERE r.contract_id = #{contractId}
+        ORDER BY r.created_time DESC
+    </select>
+
+</mapper>

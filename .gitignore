@@ -1,0 +1,153 @@
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+*.out
+*.err
+hs_err_pid*
+replay_pid*
+
+# =========================
+# Java / Maven / Spring Boot
+# =========================
+target/
+*/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Java compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Spring Boot runtime files
+*.pid
+*.pid.lock
+
+# =========================
+# Frontend / Node.js / Vite / React
+# =========================
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+vite.svg
+
+# npm / pnpm / yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+!.env.development.example
+!.env.production.example
+
+# Local config overrides
+application-local.yml
+application-local.yaml
+application-dev-local.yml
+application-test-local.yml
+application-prod-local.yml
+
+# Optional secret files
+*.pem
+*.key
+*.p12
+*.jks
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# =========================
+# Test / Report outputs
+# =========================
+surefire-reports/
+failsafe-reports/
+test-output/
+
+# =========================
+# Docker / Container
+# =========================
+.docker/
+docker-data/
+*.tar
+
+# =========================
+# Database / Cache local data
+# Keep SQL scripts, ignore runtime data dumps
+# =========================
+*.sql.gz
+*.bak
+*.dump
+
+# Redis / local cache
+dump.rdb
+appendonly.aof
+
+# =========================
+# Project-specific scripts outputs
+# =========================
+backend/**/logs/
+frontend/.cache/
+frontend/.vite/
+
+# =========================
+# Keep important project assets
+# =========================
+!database/*.sql
+!docs/**
+!README.md
+!README-DEPLOY.md

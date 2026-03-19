@@ -1,0 +1,103 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: hrms-gateway
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.15.100:8848
+        namespace: hrms
+        group: DEFAULT_GROUP
+      config:
+        server-addr: 192.168.15.100:8848
+        namespace: hrms
+        group: DEFAULT_GROUP
+        file-extension: yml
+  redis:
+    host: 192.168.15.100
+    port: 6379
+    password: 
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 0
+        max-wait: -1ms
+
+# Gateway路由配置
+spring:
+  cloud:
+    gateway:
+      # 跨域配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      # 路由配置
+      routes:
+        # 认证服务
+        - id: hrms-auth
+          uri: lb://hrms-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+        # 组织服务
+        - id: hrms-org
+          uri: lb://hrms-org
+          predicates:
+            - Path=/org/**
+          filters:
+            - StripPrefix=1
+        # 员工服务
+        - id: hrms-employee
+          uri: lb://hrms-employee
+          predicates:
+            - Path=/employee/**
+          filters:
+            - StripPrefix=1
+        # 合同服务
+        - id: hrms-contract
+          uri: lb://hrms-contract
+          predicates:
+            - Path=/contract/**
+          filters:
+            - StripPrefix=1
+        # 招聘服务
+        - id: hrms-recruit
+          uri: lb://hrms-recruit
+          predicates:
+            - Path=/recruit/**
+          filters:
+            - StripPrefix=1
+        # 薪酬服务
+        - id: hrms-payroll
+          uri: lb://hrms-payroll
+          predicates:
+            - Path=/payroll/**
+          filters:
+            - StripPrefix=1
+
+# 日志配置
+logging:
+  level:
+    org.springframework.cloud.gateway: debug
+    com.hrms: debug
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
+
+# 管理端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

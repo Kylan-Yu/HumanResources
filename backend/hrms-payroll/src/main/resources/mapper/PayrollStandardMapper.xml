@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hrms.payroll.mapper.PayrollStandardMapper">
+
+    <!-- 分页查询薪资标准 -->
+    <select id="selectPayrollStandardPage" resultType="com.hrms.payroll.vo.PayrollStandardVO">
+        SELECT 
+            s.id, s.standard_name, s.org_id, s.dept_id, s.position_id, s.grade_level,
+            s.base_salary, s.performance_salary, s.position_allowance, s.meal_allowance,
+            s.transport_allowance, s.communication_allowance, s.housing_allowance, s.other_allowance,
+            s.status, s.industry_type, s.ext_json, s.remark, s.created_time, s.updated_time,
+            o.name as orgName, d.name as deptName, p.name as positionName
+        FROM hr_payroll_standard s
+        LEFT JOIN hr_organization o ON s.org_id = o.id
+        LEFT JOIN hr_department d ON s.dept_id = d.id
+        LEFT JOIN hr_position p ON s.position_id = p.id
+        WHERE s.deleted = 0
+        <if test="query.standardName != null and query.standardName != ''">
+            AND s.standard_name LIKE CONCAT('%', #{query.standardName}, '%')
+        </if>
+        <if test="query.orgId != null">
+            AND s.org_id = #{query.orgId}
+        </if>
+        <if test="query.deptId != null">
+            AND s.dept_id = #{query.deptId}
+        </if>
+        <if test="query.positionId != null">
+            AND s.position_id = #{query.positionId}
+        </if>
+        <if test="query.gradeLevel != null and query.gradeLevel != ''">
+            AND s.grade_level = #{query.gradeLevel}
+        </if>
+        <if test="query.status != null and query.status != ''">
+            AND s.status = #{query.status}
+        </if>
+        <if test="query.industryType != null and query.industryType != ''">
+            AND s.industry_type = #{query.industryType}
+        </if>
+        ORDER BY s.created_time DESC
+    </select>
+
+    <!-- 根据ID查询薪资标准详情 -->
+    <select id="selectPayrollStandardById" resultType="com.hrms.payroll.vo.PayrollStandardVO">
+        SELECT 
+            s.id, s.standard_name, s.org_id, s.dept_id, s.position_id, s.grade_level,
+            s.base_salary, s.performance_salary, s.position_allowance, s.meal_allowance,
+            s.transport_allowance, s.communication_allowance, s.housing_allowance, s.other_allowance,
+            s.status, s.industry_type, s.ext_json, s.remark, s.created_time, s.updated_time,
+            o.name as orgName, d.name as deptName, p.name as positionName
+        FROM hr_payroll_standard s
+        LEFT JOIN hr_organization o ON s.org_id = o.id
+        LEFT JOIN hr_department d ON s.dept_id = d.id
+        LEFT JOIN hr_position p ON s.position_id = p.id
+        WHERE s.id = #{id} AND s.deleted = 0
+    </select>
+
+    <!-- 根据员工ID查询适用的薪资标准 -->
+    <select id="selectPayrollStandardByEmployeeId" resultType="com.hrms.payroll.vo.PayrollStandardVO">
+        SELECT 
+            s.id, s.standard_name, s.org_id, s.dept_id, s.position_id, s.grade_level,
+            s.base_salary, s.performance_salary, s.position_allowance, s.meal_allowance,
+            s.transport_allowance, s.communication_allowance, s.housing_allowance, s.other_allowance,
+            s.status, s.industry_type, s.ext_json, s.remark, s.created_time, s.updated_time,
+            o.name as orgName, d.name as deptName, p.name as positionName
+        FROM hr_payroll_standard s
+        LEFT JOIN hr_organization o ON s.org_id = o.id
+        LEFT JOIN hr_department d ON s.dept_id = d.id
+        LEFT JOIN hr_position p ON s.position_id = p.id
+        LEFT JOIN hr_employee e ON (
+            (s.org_id IS NULL OR e.org_id = s.org_id) AND
+            (s.dept_id IS NULL OR e.dept_id = s.dept_id) AND
+            (s.position_id IS NULL OR e.position_id = s.position_id) AND
+            (s.grade_level IS NULL OR e.grade_level = s.grade_level)
+        )
+        WHERE e.id = #{employeeId} 
+        AND s.status = 'ACTIVE'
+        AND s.deleted = 0
+        AND e.deleted = 0
+        ORDER BY s.position_id IS NOT NULL DESC, s.dept_id IS NOT NULL DESC, s.org_id IS NOT NULL DESC
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hrms.auth.mapper.UserMapper">
+
+    <!-- 分页查询用户 -->
+    <select id="selectUserPage" resultType="com.hrms.auth.entity.User">
+        SELECT 
+            id, username, real_name, mobile, email, avatar, status,
+            org_id, dept_id, position_id, industry_type,
+            last_login_time, remark, created_by, created_time, updated_by, updated_time
+        FROM sys_user
+        WHERE deleted = 0
+        <if test="query.username != null and query.username != ''">
+            AND username LIKE CONCAT('%', #{query.username}, '%')
+        </if>
+        <if test="query.realName != null and query.realName != ''">
+            AND real_name LIKE CONCAT('%', #{query.realName}, '%')
+        </if>
+        <if test="query.mobile != null and query.mobile != ''">
+            AND mobile LIKE CONCAT('%', #{query.mobile}, '%')
+        </if>
+        <if test="query.status != null">
+            AND status = #{query.status}
+        </if>
+        <if test="query.orgId != null">
+            AND org_id = #{query.orgId}
+        </if>
+        <if test="query.deptId != null">
+            AND dept_id = #{query.deptId}
+        </if>
+        <if test="query.industryType != null and query.industryType != ''">
+            AND industry_type = #{query.industryType}
+        </if>
+        ORDER BY created_time DESC
+    </select>
+
+</mapper>
