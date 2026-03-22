@@ -10,7 +10,7 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
     <name>HRMS Backend</name>
-    <description>人力资源管理系统后端微服务</description>
+    <description>Human Resource Management System Backend Microservices</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

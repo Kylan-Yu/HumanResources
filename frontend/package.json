@@ -1,7 +1,7 @@
 {
   "name": "hrms-frontend",
   "version": "1.0.0",
-  "description": "人力资源管理系统前端",
+  "description": "Human Resource Management System Frontend",
   "private": true,
   "scripts": {
     "dev": "vite",
