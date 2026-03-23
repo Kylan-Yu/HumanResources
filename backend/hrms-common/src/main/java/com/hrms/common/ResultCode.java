@@ -130,7 +130,32 @@ public enum ResultCode {
     /**
      * Token已过期
      */
-    TOKEN_EXPIRED(806, "Token已过期");
+    TOKEN_EXPIRED(806, "Token已过期"),
+
+    /**
+     * 用户名已存在
+     */
+    USERNAME_ALREADY_EXISTS(807, "用户名已存在"),
+
+    /**
+     * 手机号已存在
+     */
+    MOBILE_ALREADY_EXISTS(808, "手机号已存在"),
+
+    /**
+     * 邮箱已存在
+     */
+    EMAIL_ALREADY_EXISTS(809, "邮箱已存在"),
+
+    /**
+     * 用户不存在
+     */
+    USER_NOT_FOUND(810, "用户不存在"),
+
+    /**
+     * Token刷新失败
+     */
+    TOKEN_REFRESH_FAILED(811, "Token刷新失败");
 
     /**
      * 状态码

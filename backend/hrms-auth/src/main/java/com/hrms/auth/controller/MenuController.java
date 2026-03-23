@@ -1,7 +1,7 @@
 package com.hrms.auth.controller;
 
 import com.hrms.auth.mapper.MenuMapper;
-import com.hrms.auth.model.Menu;
+import com.hrms.auth.entity.Menu;
 import com.hrms.common.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

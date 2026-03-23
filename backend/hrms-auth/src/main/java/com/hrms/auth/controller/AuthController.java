@@ -1,7 +1,7 @@
 package com.hrms.auth.controller;
 
 import com.hrms.auth.dto.LoginRequest;
-import com.hrms.auth.dto.LoginResponse;
+import com.hrms.auth.vo.LoginResponse;
 import com.hrms.auth.service.AuthService;
 import com.hrms.common.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * 认证控制器

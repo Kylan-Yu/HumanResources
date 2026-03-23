@@ -1,11 +1,22 @@
 server:
-  port: 8082
+  port: 8086
 
 spring:
   application:
-    name: hrms-system
+    name: hrms-payroll
   profiles:
     active: dev
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: hrms
+        group: DEFAULT_GROUP
+      config:
+        server-addr: localhost:8848
+        namespace: hrms
+        group: DEFAULT_GROUP
+        file-extension: yml
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/hrms?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai

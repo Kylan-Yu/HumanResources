@@ -40,6 +40,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       label: '系统管理',
       children: [
         { key: '/system/user', label: '用户管理' },
+        { key: '/system/test', label: 'API测试' },
         { key: '/system/role', label: '角色管理' },
         { key: '/system/menu', label: '菜单管理' },
         { key: '/system/dict', label: '字典管理' }

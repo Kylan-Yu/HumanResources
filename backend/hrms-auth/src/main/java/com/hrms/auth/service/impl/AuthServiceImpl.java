@@ -3,7 +3,7 @@ package com.hrms.auth.service.impl;
 import com.hrms.auth.dto.LoginRequest;
 import com.hrms.auth.vo.LoginResponse;
 import com.hrms.auth.mapper.UserMapper;
-import com.hrms.auth.model.User;
+import com.hrms.auth.entity.User;
 import com.hrms.auth.service.AuthService;
 import com.hrms.auth.util.JwtUtil;
 import com.hrms.common.exception.BusinessException;

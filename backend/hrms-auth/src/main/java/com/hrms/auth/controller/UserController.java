@@ -38,7 +38,8 @@ public class UserController {
     @PreAuthorize("hasAuthority('system:user:list')")
     public Result<PageResult<UserVO>> pageUsers(@Valid UserQueryDTO query) {
         IPage<UserVO> page = userService.pageUsers(query);
-        return Result.success(PageResult.of(page));
+        return Result.success(PageResult.of(page.getRecords(), page.getTotal(), 
+                (int) page.getCurrent(), (int) page.getSize()));
     }
 
     @Operation(summary = "创建用户")
