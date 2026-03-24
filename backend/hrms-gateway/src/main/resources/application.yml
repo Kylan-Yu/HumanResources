@@ -17,10 +17,34 @@ spring:
         namespace: hrms
         group: DEFAULT_GROUP
         file-extension: yml
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: '*'
+            allowedMethods: '*'
+            allowedHeaders: '*'
+            allowCredentials: true
+      routes:
+        - id: hrms-auth
+          uri: lb://hrms-auth
+          predicates:
+            - Path=/auth/**
+
+        - id: hrms-system-api
+          uri: lb://hrms-system
+          predicates:
+            - Path=/users/**,/roles/**,/menus/**,/dicts/**,/org/**,/dept/**,/position/**,/rank/**,/employees/**,/employee-changes/**,/recruit-requirements/**,/payroll-standards/**,/performance/**,/training/**,/contracts/**
+
+        - id: hrms-system-misc
+          uri: lb://hrms-system
+          predicates:
+            - Path=/test/**,/db-test/**,/test-org/**
+
   redis:
     host: 192.168.15.100
     port: 6379
-    password: 
+    password:
     database: 0
     timeout: 3000ms
     lettuce:
@@ -30,64 +54,6 @@ spring:
         min-idle: 0
         max-wait: -1ms
 
-# Gateway路由配置
-spring:
-  cloud:
-    gateway:
-      # 跨域配置
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOriginPatterns: "*"
-            allowedMethods: "*"
-            allowedHeaders: "*"
-            allowCredentials: true
-      # 路由配置
-      routes:
-        # 认证服务
-        - id: hrms-auth
-          uri: lb://hrms-auth
-          predicates:
-            - Path=/auth/**
-          filters:
-            - StripPrefix=1
-        # 组织服务
-        - id: hrms-org
-          uri: lb://hrms-org
-          predicates:
-            - Path=/org/**
-          filters:
-            - StripPrefix=1
-        # 员工服务
-        - id: hrms-employee
-          uri: lb://hrms-employee
-          predicates:
-            - Path=/employee/**
-          filters:
-            - StripPrefix=1
-        # 合同服务
-        - id: hrms-contract
-          uri: lb://hrms-contract
-          predicates:
-            - Path=/contract/**
-          filters:
-            - StripPrefix=1
-        # 招聘服务
-        - id: hrms-recruit
-          uri: lb://hrms-recruit
-          predicates:
-            - Path=/recruit/**
-          filters:
-            - StripPrefix=1
-        # 薪酬服务
-        - id: hrms-payroll
-          uri: lb://hrms-payroll
-          predicates:
-            - Path=/payroll/**
-          filters:
-            - StripPrefix=1
-
-# 日志配置
 logging:
   level:
     org.springframework.cloud.gateway: debug
@@ -95,9 +61,9 @@ logging:
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
 
-# 管理端点
 management:
   endpoints:
     web:
       exposure:
         include: health,info,gateway
+

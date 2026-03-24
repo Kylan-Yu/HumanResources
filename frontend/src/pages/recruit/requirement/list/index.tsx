@@ -103,7 +103,7 @@ const RecruitRequirementList: React.FC = () => {
     return colorMap[urgency] || 'default'
   }
 
-  const columns = [
+  const columns: any[] = [
     {
       title: '需求编号',
       dataIndex: 'requirementNo',

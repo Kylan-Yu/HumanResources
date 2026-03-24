@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>组织管理API测试</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>组织管理API测试</h1>
+    
+    <div>
+        <button onclick="testOrgTree()">测试组织树</button>
+        <button onclick="testDeptTree()">测试部门树</button>
+        <button onclick="testDbConnection()">测试数据库连接</button>
+    </div>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; min-height: 100px;">
+        结果将显示在这里...
+    </div>
+    
+    <script>
+        async function testOrgTree() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试组织树API...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/org/tree');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>组织树API成功</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>组织树API失败</h3>
+                        <p>状态码: ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>组织树API错误</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testDeptTree() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试部门树API...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/dept/tree');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>部门树API成功</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>部门树API失败</h3>
+                        <p>状态码: ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>部门树API错误</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testDbConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试数据库连接...';
+            
+            try {
+                const response = await fetch('http://localhost:8080/db-test/connection');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>数据库连接成功</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>数据库连接失败</h3>
+                        <p>状态码: ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>数据库连接错误</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

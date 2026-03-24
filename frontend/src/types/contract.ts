@@ -70,6 +70,7 @@ export interface ContractQueryParams {
   pageNum?: number
   pageSize?: number
   employeeId?: number
+  employeeNo?: string
   employeeName?: string
   contractNo?: string
   contractType?: string
@@ -79,4 +80,5 @@ export interface ContractQueryParams {
   endDateBegin?: string
   endDateEnd?: string
   industryType?: string
+  dateRange?: [string, string] | []
 }

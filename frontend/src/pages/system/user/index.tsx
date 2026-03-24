@@ -5,7 +5,18 @@ import { getUserPage, createUser, updateUser, deleteUser, updateUserStatus, rese
 import type { User, PageResult } from '@/types'
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState<PageResult<User>>({ list: [], total: 0 })
+  const [users, setUsers] = useState<PageResult<User>>({
+    list: [],
+    records: [],
+    total: 0,
+    pageNum: 1,
+    pageSize: 10,
+    current: 1,
+    size: 10,
+    pages: 0,
+    hasNext: false,
+    hasPrevious: false
+  })
   const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
@@ -300,7 +311,7 @@ const UserManagement: React.FC = () => {
         </div>
         <Table
           columns={columns}
-          dataSource={users.list}
+          dataSource={users.records}
           rowKey="id"
           loading={loading}
           pagination={{

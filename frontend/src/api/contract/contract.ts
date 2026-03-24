@@ -1,5 +1,6 @@
 import { get, post, put, del } from '@/utils/request'
-import type { PageResult, Contract } from '@/types'
+import type { PageResult } from '@/types'
+import type { Contract } from '@/types/contract'
 
 // 合同分页查询
 export const getContractPage = (params: {

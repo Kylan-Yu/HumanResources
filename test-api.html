@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+    <script>
+        async function testAPI() {
+            try {
+                const response = await fetch('http://localhost:8082/users/page');
+                const data = await response.json();
+                console.log('API Response:', data);
+                document.getElementById('result').innerHTML = JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('API Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+        
+        window.onload = testAPI;
+    </script>
+</head>
+<body>
+    <h1>HRMS API Test</h1>
+    <button onclick="testAPI()">Test User API</button>
+    <pre id="result"></pre>
+</body>
+</html>

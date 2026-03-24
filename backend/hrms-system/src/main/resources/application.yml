@@ -6,17 +6,6 @@ spring:
     name: hrms-system
   profiles:
     active: dev
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 192.168.15.100:8848
-        namespace: hrms
-        group: DEFAULT_GROUP
-      config:
-        server-addr: 192.168.15.100:8848
-        namespace: hrms
-        group: DEFAULT_GROUP
-        file-extension: yml
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.15.100:3306/hrms_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
@@ -47,11 +36,26 @@ spring:
         min-idle: 0
         max-wait: -1ms
 
+# MinIO配置
+minio:
+  endpoint: http://192.168.15.100:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket-name: hrms
+
+h2:
+  console:
+    enabled: false
+    path: /h2-console
+
+# SQL初始化已禁用，使用统一SQL文件 hrms_complete.sql
+
 # MyBatis Plus配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     call-setters-on-nulls: true
     jdbc-type-for-null: 'null'
   global-config:
@@ -60,7 +64,7 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
-  mapper-locations: classpath*:mapper/**/*.xml
+  mapper-locations: classpath:mapper/*.xml
 
 # 日志配置
 logging:

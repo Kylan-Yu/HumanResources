@@ -7,92 +7,91 @@ import com.hrms.contract.entity.Contract;
 import com.hrms.contract.enums.ContractStatusEnum;
 import com.hrms.contract.enums.ContractTypeEnum;
 import com.hrms.contract.vo.ContractVO;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
-/**
- * 合同转换器
- *
- * @author HRMS
- */
-@Mapper
 @Component
-public interface ContractConvert {
+public class ContractConvert {
 
-    /**
-     * 创建DTO转实体
-     */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "contractNo", ignore = true)
-    @Mapping(target = "contractStatus", ignore = true)
-    @Mapping(target = "renewCount", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdTime", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedTime", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    Contract createDtoToEntity(ContractCreateDTO dto);
+    public Contract createDtoToEntity(ContractCreateDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        Contract entity = new Contract();
+        entity.setEmployeeId(dto.getEmployeeId());
+        entity.setContractType(dto.getContractType());
+        entity.setContractSubject(dto.getContractSubject());
+        entity.setStartDate(dto.getStartDate());
+        entity.setEndDate(dto.getEndDate());
+        entity.setSignDate(dto.getSignDate());
+        entity.setIndustryType(dto.getIndustryType());
+        entity.setExtJson(dto.getExtJson());
+        entity.setRemark(dto.getRemark());
+        return entity;
+    }
 
-    /**
-     * 更新DTO转实体
-     */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "employeeId", ignore = true)
-    @Mapping(target = "contractNo", ignore = true)
-    @Mapping(target = "contractStatus", ignore = true)
-    @Mapping(target = "renewCount", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdTime", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedTime", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    Contract updateDtoToEntity(ContractUpdateDTO dto);
+    public Contract updateDtoToEntity(ContractUpdateDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        Contract entity = new Contract();
+        entity.setContractType(dto.getContractType());
+        entity.setContractSubject(dto.getContractSubject());
+        entity.setStartDate(dto.getStartDate());
+        entity.setEndDate(dto.getEndDate());
+        entity.setSignDate(dto.getSignDate());
+        entity.setIndustryType(dto.getIndustryType());
+        entity.setExtJson(dto.getExtJson());
+        entity.setRemark(dto.getRemark());
+        return entity;
+    }
 
-    /**
-     * 实体转VO
-     */
-    @Mapping(target = "employeeName", ignore = true)
-    @Mapping(target = "employeeNo", ignore = true)
-    @Mapping(target = "contractTypeDesc", expression = "java(getContractTypeDesc(entity.getContractType()))")
-    @Mapping(target = "contractStatusDesc", expression = "java(getContractStatusDesc(entity.getContractStatus()))")
-    @Mapping(target = "industryTypeDesc", expression = "java(getIndustryTypeDesc(entity.getIndustryType()))")
-    @Mapping(target = "records", ignore = true)
-    ContractVO entityToVo(Contract entity);
+    public ContractVO entityToVo(Contract entity) {
+        if (entity == null) {
+            return null;
+        }
+        ContractVO vo = new ContractVO();
+        vo.setId(entity.getId());
+        vo.setEmployeeId(entity.getEmployeeId());
+        vo.setContractNo(entity.getContractNo());
+        vo.setContractType(entity.getContractType());
+        vo.setContractTypeDesc(getContractTypeDesc(entity.getContractType()));
+        vo.setContractSubject(entity.getContractSubject());
+        vo.setStartDate(entity.getStartDate());
+        vo.setEndDate(entity.getEndDate());
+        vo.setSignDate(entity.getSignDate());
+        vo.setContractStatus(entity.getContractStatus());
+        vo.setContractStatusDesc(getContractStatusDesc(entity.getContractStatus()));
+        vo.setRenewCount(entity.getRenewCount());
+        vo.setIndustryType(entity.getIndustryType());
+        vo.setIndustryTypeDesc(getIndustryTypeDesc(entity.getIndustryType()));
+        vo.setExtJson(entity.getExtJson());
+        vo.setRemark(entity.getRemark());
+        vo.setCreatedTime(entity.getCreatedTime());
+        vo.setUpdatedTime(entity.getUpdatedTime());
+        return vo;
+    }
 
-    /**
-     * 查询DTO转VO
-     */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "employeeId", source = "employeeId")
-    @Mapping(target = "employeeName", source = "employeeName")
-    @Mapping(target = "contractNo", source = "contractNo")
-    @Mapping(target = "contractType", source = "contractType")
-    @Mapping(target = "contractTypeDesc", ignore = true)
-    @Mapping(target = "contractSubject", ignore = true)
-    @Mapping(target = "startDate", source = "startDateBegin")
-    @Mapping(target = "endDate", ignore = true)
-    @Mapping(target = "signDate", ignore = true)
-    @Mapping(target = "contractStatus", source = "contractStatus")
-    @Mapping(target = "contractStatusDesc", ignore = true)
-    @Mapping(target = "renewCount", ignore = true)
-    @Mapping(target = "industryType", source = "industryType")
-    @Mapping(target = "industryTypeDesc", ignore = true)
-    @Mapping(target = "extJson", ignore = true)
-    @Mapping(target = "remark", ignore = true)
-    @Mapping(target = "createdTime", ignore = true)
-    @Mapping(target = "updatedTime", ignore = true)
-    @Mapping(target = "records", ignore = true)
-    ContractVO queryDtoToVo(ContractQueryDTO dto);
+    public ContractVO queryDtoToVo(ContractQueryDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        ContractVO vo = new ContractVO();
+        vo.setEmployeeId(dto.getEmployeeId());
+        vo.setEmployeeName(dto.getEmployeeName());
+        vo.setContractNo(dto.getContractNo());
+        vo.setContractType(dto.getContractType());
+        vo.setContractStatus(dto.getContractStatus());
+        vo.setStartDate(dto.getStartDateBegin());
+        vo.setEndDate(dto.getEndDateBegin());
+        vo.setIndustryType(dto.getIndustryType());
+        return vo;
+    }
 
-    /**
-     * 获取合同类型描述
-     */
-    default String getContractTypeDesc(String contractType) {
+    public String getContractTypeDesc(String contractType) {
         if (!StringUtils.hasText(contractType)) {
             return "";
         }
@@ -103,10 +102,7 @@ public interface ContractConvert {
         }
     }
 
-    /**
-     * 获取合同状态描述
-     */
-    default String getContractStatusDesc(String contractStatus) {
+    public String getContractStatusDesc(String contractStatus) {
         if (!StringUtils.hasText(contractStatus)) {
             return "";
         }
@@ -117,10 +113,7 @@ public interface ContractConvert {
         }
     }
 
-    /**
-     * 获取行业类型描述
-     */
-    default String getIndustryTypeDesc(String industryType) {
+    public String getIndustryTypeDesc(String industryType) {
         if (!StringUtils.hasText(industryType)) {
             return "";
         }
@@ -134,10 +127,7 @@ public interface ContractConvert {
         }
     }
 
-    /**
-     * 计算合同剩余天数
-     */
-    default Integer calculateRemainingDays(LocalDate endDate) {
+    public Integer calculateRemainingDays(LocalDate endDate) {
         if (endDate == null) {
             return null;
         }

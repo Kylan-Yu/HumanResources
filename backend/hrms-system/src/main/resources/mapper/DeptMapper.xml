@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hrms.system.mapper.DeptMapper">
+
+    <!-- 统计部门下的岗位数量 -->
+    <select id="countPositionsByDept" resultType="int">
+        SELECT COUNT(*) 
+        FROM hr_position 
+        WHERE dept_id = #{deptId} AND deleted = 0
+    </select>
+
+</mapper>

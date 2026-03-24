@@ -19,6 +19,9 @@ export interface PageRequest {
 
 // 分页响应数据
 export interface PageResult<T = any> {
+  list: T[]
+  pageNum?: number
+  pageSize?: number
   records: T[]
   total: number
   current: number
@@ -84,6 +87,7 @@ export interface Organization {
   extJson?: Record<string, any>
   createTime: string
   updateTime: string
+  children?: Organization[]
 }
 
 // 部门相关类型
@@ -122,7 +126,7 @@ export interface Position {
 }
 
 // 员工相关类型
-export interface Employee {
+export interface LegacyEmployee {
   id: number
   employeeCode: string
   userId?: number

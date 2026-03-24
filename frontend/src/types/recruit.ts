@@ -151,4 +151,5 @@ export interface RecruitRequirementQueryParams {
   industryType?: string
   expectedEntryDateBegin?: string
   expectedEntryDateEnd?: string
+  dateRange?: [string, string] | []
 }

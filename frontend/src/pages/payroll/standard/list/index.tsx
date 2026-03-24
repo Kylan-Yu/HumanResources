@@ -90,7 +90,7 @@ const PayrollStandardList: React.FC = () => {
     }).format(value)
   }
 
-  const columns = [
+  const columns: any[] = [
     {
       title: '标准名称',
       dataIndex: 'standardName',

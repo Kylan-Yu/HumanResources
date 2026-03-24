@@ -5,18 +5,7 @@ spring:
   application:
     name: hrms-auth
   profiles:
-    active: dev
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 192.168.15.100:8848
-        namespace: hrms
-        group: DEFAULT_GROUP
-      config:
-        server-addr: 192.168.15.100:8848
-        namespace: hrms
-        group: DEFAULT_GROUP
-        file-extension: yml
+    active: minimal
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.15.100:3306/hrms_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai

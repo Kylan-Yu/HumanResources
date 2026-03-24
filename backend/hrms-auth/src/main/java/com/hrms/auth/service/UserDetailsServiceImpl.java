@@ -1,7 +1,7 @@
 package com.hrms.auth.service;
 
 import com.hrms.auth.mapper.UserMapper;
-import com.hrms.auth.model.User;
+import com.hrms.auth.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
