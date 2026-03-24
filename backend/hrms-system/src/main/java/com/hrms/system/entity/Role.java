@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("hr_role")
+@TableName("sys_role")
 public class Role {
 
     @TableId(value = "id", type = IdType.AUTO)

@@ -1,5 +1,6 @@
 import { get, post, put, del } from '@/utils/request'
-import type { PageResult, PayrollStandard } from '@/types'
+import type { PageResult } from '@/types'
+import type { PayrollStandard } from '@/types/payroll'
 
 // 薪资标准分页查询
 export const getPayrollStandardPage = (params: {

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 菜单实体
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("hr_menu")
+@TableName("sys_menu")
 public class Menu {
 
     @TableId(value = "id", type = IdType.AUTO)
@@ -25,14 +26,8 @@ public class Menu {
     @TableField("menu_name")
     private String menuName;
 
-    @TableField("menu_code")
-    private String menuCode;
-
     @TableField("menu_type")
     private Integer menuType;
-
-    @TableField("icon")
-    private String icon;
 
     @TableField("path")
     private String path;
@@ -43,14 +38,17 @@ public class Menu {
     @TableField("permission")
     private String permission;
 
+    @TableField("icon")
+    private String icon;
+
     @TableField("sort_order")
     private Integer sortOrder;
 
+    @TableField("visible")
+    private Integer visible;
+
     @TableField("status")
     private Integer status;
-
-    @TableField("is_external")
-    private Integer isExternal;
 
     @TableField("created_by")
     private Long createdBy;
@@ -63,6 +61,9 @@ public class Menu {
 
     @TableField("updated_time")
     private LocalDateTime updatedTime;
+
+    @TableField(exist = false)
+    private List<Menu> children;
 
     @TableLogic
     @TableField("deleted")

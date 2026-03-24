@@ -115,7 +115,7 @@ const ContractList: React.FC = () => {
     return colorMap[status] || 'default'
   }
 
-  const columns = [
+  const columns: any[] = [
     {
       title: '合同编号',
       dataIndex: 'contractNo',

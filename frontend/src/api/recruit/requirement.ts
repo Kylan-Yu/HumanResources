@@ -1,5 +1,6 @@
 import { get, post, put, del } from '@/utils/request'
-import type { PageResult, RecruitRequirement } from '@/types'
+import type { PageResult } from '@/types'
+import type { RecruitRequirement } from '@/types/recruit'
 
 // 招聘需求分页查询
 export const getRecruitRequirementPage = (params: {

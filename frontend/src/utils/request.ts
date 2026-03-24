@@ -1,112 +1,80 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import { message } from 'antd'
 
-// 响应数据接口
 export interface ApiResponse<T = any> {
   code: number
   message: string
   data: T
-  timestamp: number
+  timestamp?: number
 }
 
-// 创建axios实例
 const request: AxiosInstance = axios.create({
   baseURL: '/api',
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// 请求拦截器
 request.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
-    // 从localStorage获取token
+  (config: any) => {
     const token = localStorage.getItem('token')
-    if (token && config.headers) {
+    if (token) {
+      config.headers = config.headers || {}
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
-// 响应拦截器
-request.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    const { code, message: msg, data } = response.data
-    
-    // 请求成功
-    if (code === 200) {
-      return response.data
+;(request.interceptors.response as any).use(
+  (response: any) => {
+    const payload: ApiResponse = response.data
+    if (payload?.code === 200) {
+      return payload
     }
-    
-    // 业务错误
-    message.error(msg || '请求失败')
-    return Promise.reject(new Error(msg || '请求失败'))
+    message.error(payload?.message || '请求失败')
+    return Promise.reject(new Error(payload?.message || '请求失败'))
   },
-  (error) => {
-    const { response } = error
-    
-    if (response) {
-      const { status, data } = response
-      
-      switch (status) {
-        case 401:
-          message.error('未登录或登录已过期')
-          // 跳转到登录页
-          window.location.href = '/login'
-          break
-        case 403:
-          message.error('没有权限访问该资源')
-          break
-        case 404:
-          message.error('请求的资源不存在')
-          break
-        case 500:
-          message.error('服务器内部错误')
-          break
-        default:
-          message.error(data?.message || '网络错误')
-      }
+  (error: any) => {
+    const status = error?.response?.status
+    if (status === 401) {
+      message.error('未登录或登录已过期')
+      window.location.href = '/login'
+    } else if (status === 403) {
+      message.error('没有权限访问')
+    } else if (status === 404) {
+      message.error('请求资源不存在')
+    } else if (status === 500) {
+      message.error('服务器内部错误')
     } else {
-      // 网络错误
-      message.error('网络连接失败，请检查网络设置')
+      message.error(error?.response?.data?.message || '网络连接失败')
     }
-    
     return Promise.reject(error)
   }
 )
 
-// GET请求
 export const get = <T = any>(url: string, params?: any): Promise<ApiResponse<T>> => {
-  return request.get(url, { params })
+  return request.get(url, { params }) as unknown as Promise<ApiResponse<T>>
 }
 
-// POST请求
 export const post = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> => {
-  return request.post(url, data)
+  return request.post(url, data) as unknown as Promise<ApiResponse<T>>
 }
 
-// PUT请求
 export const put = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> => {
-  return request.put(url, data)
+  return request.put(url, data) as unknown as Promise<ApiResponse<T>>
 }
 
-// DELETE请求
 export const del = <T = any>(url: string, params?: any): Promise<ApiResponse<T>> => {
-  return request.delete(url, { params })
+  return request.delete(url, { params }) as unknown as Promise<ApiResponse<T>>
 }
 
-// 文件上传
 export const upload = <T = any>(url: string, formData: FormData): Promise<ApiResponse<T>> => {
   return request.post(url, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }) as unknown as Promise<ApiResponse<T>>
 }
 
 export default request

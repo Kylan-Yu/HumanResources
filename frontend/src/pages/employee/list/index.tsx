@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { Card, Table, Button, Space, Modal, Form, Input, Select, Switch, message, Popconfirm, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons'
 import { getEmployeePage, deleteEmployee, updateEmployeeStatus } from '@/api/employee'
-import type { Employee, PageResult } from '@/types/employee'
+import type { Employee } from '@/types/employee'
 
 const EmployeeList: React.FC = () => {
-  const [employees, setEmployees] = useState<PageResult<Employee>>({ list: [], total: 0 })
+  const [employees, setEmployees] = useState<any>({ list: [], total: 0 })
   const [loading, setLoading] = useState(false)
   const [searchParams, setSearchParams] = useState({
     pageNum: 1,
@@ -88,7 +88,7 @@ const EmployeeList: React.FC = () => {
   )
 
   // 表格列定义
-  const columns = [
+  const columns: any[] = [
     {
       title: '员工编号',
       dataIndex: 'employeeNo',
@@ -215,7 +215,7 @@ const EmployeeList: React.FC = () => {
           </Button>
           <Popconfirm
             title="确定要删除该员工吗？"
-            content="删除后将无法恢复，请谨慎操作"
+            description="删除后将无法恢复，请谨慎操作"
             onConfirm={async () => {
               try {
                 await deleteEmployee(record.id!)

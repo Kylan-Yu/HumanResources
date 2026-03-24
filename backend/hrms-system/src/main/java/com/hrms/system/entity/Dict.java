@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("hr_dict")
+@TableName("sys_dict")
 public class Dict {
 
     @TableId(value = "id", type = IdType.AUTO)
@@ -22,14 +22,14 @@ public class Dict {
     @TableField("dict_name")
     private String dictName;
 
-    @TableField("dict_code")
-    private String dictCode;
-
-    @TableField("description")
-    private String description;
+    @TableField("dict_type")
+    private String dictType;
 
     @TableField("status")
     private Integer status;
+
+    @TableField("remark")
+    private String remark;
 
     @TableField("created_by")
     private Long createdBy;

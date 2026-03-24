@@ -59,7 +59,7 @@ const ContractExpireWarning: React.FC = () => {
     return diffDays > 0 ? diffDays : 0
   }
 
-  const columns = [
+  const columns: any[] = [
     {
       title: '合同编号',
       dataIndex: 'contractNo',

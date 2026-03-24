@@ -8,18 +8,20 @@
             u.id,
             u.username,
             u.real_name as realName,
-            u.mobile,
+            u.phone as mobile,
             u.email,
             u.avatar,
             u.status,
             u.last_login_time as lastLoginTime,
             u.last_login_ip as lastLoginIp,
+            u.industry_type as industryType,
+            u.ext_json as extJson,
             u.created_by as createdBy,
             u.created_time as createdTime,
             u.updated_by as updatedBy,
             u.updated_time as updatedTime,
             u.deleted
-        FROM hr_user u
+        FROM sys_user u
         WHERE u.deleted = 0
         <if test="username != null and username != ''">
             AND u.username LIKE CONCAT('%', #{username}, '%')

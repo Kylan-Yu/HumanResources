@@ -1,5 +1,6 @@
 import { get, post, put, del } from '@/utils/request'
-import type { PageResult, Employee } from '@/types'
+import type { PageResult } from '@/types'
+import type { Employee } from '@/types/employee'
 
 // 员工分页查询
 export const getEmployeePage = (params: {

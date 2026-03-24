@@ -1,5 +1,6 @@
 package com.hrms.common;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -64,6 +65,13 @@ public class PageResult<T> implements Serializable {
      */
     public static <T> PageResult<T> of(List<T> list, Long total, Integer pageNum, Integer pageSize) {
         return new PageResult<>(list, total, pageNum, pageSize);
+    }
+
+    /**
+     * Create page result from MyBatis-Plus page object.
+     */
+    public static <T> PageResult<T> of(IPage<T> page) {
+        return new PageResult<>(page.getRecords(), page.getTotal(), (int) page.getCurrent(), (int) page.getSize());
     }
 
     /**

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hrms.system.mapper.PositionMapper">
+
+    <!-- 岗位分页查询 -->
+    <select id="selectPositionPage" resultType="com.hrms.system.entity.Position">
+        SELECT 
+            p.id,
+            p.position_code as positionCode,
+            p.position_name as positionName,
+            p.org_id as orgId,
+            p.dept_id as deptId,
+            p.position_category as positionCategory,
+            p.rank_grade as rankGrade,
+            p.rank_series as rankSeries,
+            p.job_description as jobDescription,
+            p.requirements,
+            p.status,
+            p.sort_order as sortOrder,
+            p.ext_json as extJson,
+            p.created_by as createdBy,
+            p.created_time as createdTime,
+            p.updated_by as updatedBy,
+            p.updated_time as updatedTime,
+            p.deleted
+        FROM hr_position p
+        WHERE p.deleted = 0
+        <if test="positionName != null and positionName != ''">
+            AND p.position_name LIKE CONCAT('%', #{positionName}, '%')
+        </if>
+        <if test="positionCode != null and positionCode != ''">
+            AND p.position_code LIKE CONCAT('%', #{positionCode}, '%')
+        </if>
+        <if test="orgId != null">
+            AND p.org_id = #{orgId}
+        </if>
+        <if test="deptId != null">
+            AND p.dept_id = #{deptId}
+        </if>
+        <if test="status != null">
+            AND p.status = #{status}
+        </if>
+        ORDER BY p.sort_order ASC, p.created_time DESC
+    </select>
+
+    <!-- 统计岗位下的员工数量 -->
+    <select id="countEmployeesByPosition" resultType="int">
+        SELECT COUNT(*)
+        FROM hr_employee_job
+        WHERE position_id = #{positionId} AND deleted = 0
+    </select>
+
+</mapper>

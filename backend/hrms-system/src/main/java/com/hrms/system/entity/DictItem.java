@@ -13,32 +13,38 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("hr_dict_item")
+@TableName("sys_dict_item")
 public class DictItem {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
-    @TableField("dict_id")
-    private Long dictId;
+    @TableField("dict_sort")
+    private Integer dictSort;
 
-    @TableField("item_name")
-    private String itemName;
+    @TableField("dict_label")
+    private String dictLabel;
 
-    @TableField("item_code")
-    private String itemCode;
+    @TableField("dict_value")
+    private String dictValue;
 
-    @TableField("item_value")
-    private String itemValue;
+    @TableField("dict_type")
+    private String dictType;
 
-    @TableField("description")
-    private String description;
+    @TableField("css_class")
+    private String cssClass;
 
-    @TableField("sort_order")
-    private Integer sortOrder;
+    @TableField("list_class")
+    private String listClass;
+
+    @TableField("is_default")
+    private String isDefault;
 
     @TableField("status")
     private Integer status;
+
+    @TableField("remark")
+    private String remark;
 
     @TableField("created_by")
     private Long createdBy;

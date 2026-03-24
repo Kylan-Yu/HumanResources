@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("hr_user")
+@TableName("sys_user")
 public class User {
 
     @TableId(value = "id", type = IdType.AUTO)
@@ -28,7 +28,7 @@ public class User {
     @TableField("real_name")
     private String realName;
 
-    @TableField("mobile")
+    @TableField("phone")
     private String mobile;
 
     @TableField("email")
@@ -45,6 +45,12 @@ public class User {
 
     @TableField("last_login_ip")
     private String lastLoginIp;
+
+    @TableField("industry_type")
+    private String industryType;
+
+    @TableField("ext_json")
+    private String extJson;
 
     @TableField("created_by")
     private Long createdBy;
