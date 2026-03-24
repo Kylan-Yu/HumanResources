@@ -746,10 +746,10 @@ CREATE TABLE `hr_contract_record` (
 -- 9. Compatibility Adjustments
 -- ============================================================================
 
-ALTER TABLE `hr_employee` ADD COLUMN IF NOT EXISTS `org_id` bigint DEFAULT NULL;
-ALTER TABLE `hr_employee` ADD COLUMN IF NOT EXISTS `dept_id` bigint DEFAULT NULL;
-ALTER TABLE `hr_employee` ADD COLUMN IF NOT EXISTS `position_id` bigint DEFAULT NULL;
-ALTER TABLE `hr_employee` ADD COLUMN IF NOT EXISTS `grade_level` varchar(30) DEFAULT NULL;
+ALTER TABLE `hr_employee` ADD COLUMN `org_id` bigint DEFAULT NULL;
+ALTER TABLE `hr_employee` ADD COLUMN `dept_id` bigint DEFAULT NULL;
+ALTER TABLE `hr_employee` ADD COLUMN `position_id` bigint DEFAULT NULL;
+ALTER TABLE `hr_employee` ADD COLUMN `grade_level` varchar(30) DEFAULT NULL;
 
 DROP VIEW IF EXISTS `hr_organization`;
 CREATE VIEW `hr_organization` AS
