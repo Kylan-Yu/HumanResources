@@ -14,3 +14,7 @@ export const updateNotice = (id: number, data: any) => put<boolean>(`/notices/${
 export const deleteNotice = (id: number) => del<boolean>(`/notices/${id}`)
 
 export const markNoticeRead = (id: number) => post<boolean>(`/notices/${id}/read`)
+
+export const getDeptNoticePage = (params: any) => get<PageResult<any>>('/notices/dept/page', params)
+
+export const getDeptNoticeDetail = (id: number) => get<any>(`/notices/dept/${id}`)

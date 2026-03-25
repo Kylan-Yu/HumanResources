@@ -3,6 +3,7 @@ package com.hrms.system.controller;
 import com.hrms.common.PageResult;
 import com.hrms.common.Result;
 import com.hrms.system.security.SecurityUtils;
+import com.hrms.system.service.WorkflowRuntimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -31,6 +32,7 @@ public class LeaveApplicationController {
     private static final Pattern DAY_EXPRESSION = Pattern.compile("(?i)^\\s*days\\s*(<=|>=|<|>|==|!=)\\s*([0-9]+(?:\\.[0-9]+)?)\\s*$");
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final WorkflowRuntimeService workflowRuntimeService;
 
     @GetMapping("/leave-applications/page")
     @PreAuthorize("hasAnyAuthority('*:*:*','leave:manage')")
@@ -102,7 +104,25 @@ public class LeaveApplicationController {
             return Result.error("请假申请创建失败");
         }
 
-        createWorkflowForLeave(leaveId, currentUserId, leaveDays, body);
+        WorkflowRuntimeService.WorkflowStartResult startResult = workflowRuntimeService.startWorkflow(
+                "LEAVE",
+                leaveId,
+                currentUserId,
+                body,
+                Map.of("days", leaveDays)
+        );
+        namedParameterJdbcTemplate.update("""
+                        UPDATE hr_leave_apply
+                        SET status = :status,
+                            current_instance_id = :instanceId,
+                            updated_time = NOW()
+                        WHERE id = :id
+                        """,
+                new MapSqlParameterSource()
+                        .addValue("id", leaveId)
+                        .addValue("instanceId", startResult.instanceId())
+                        .addValue("status", startResult.businessStatus())
+        );
         return Result.success(leaveId);
     }
 
@@ -342,16 +362,34 @@ public class LeaveApplicationController {
                        i.business_type AS businessType,
                        i.business_id AS businessId,
                        i.status AS instanceStatus,
-                       l.apply_no AS applyNo,
+                       COALESCE(l.apply_no, p.apply_no, o.apply_no) AS applyNo,
                        l.leave_type AS leaveType,
                        l.start_time AS leaveStartTime,
                        l.end_time AS leaveEndTime,
                        l.leave_days AS leaveDays,
-                       l.reason AS leaveReason,
-                       u.real_name AS applicantName
+                       p.attendance_date AS patchDate,
+                       p.patch_time AS patchTime,
+                       p.patch_type AS patchType,
+                       o.overtime_date AS overtimeDate,
+                       o.start_time AS overtimeStartTime,
+                       o.end_time AS overtimeEndTime,
+                       o.hours AS overtimeHours,
+                       COALESCE(l.reason, p.reason, o.reason) AS leaveReason,
+                       COALESCE(ul.real_name, up.real_name, uo.real_name, u.real_name) AS applicantName,
+                       CASE
+                           WHEN i.business_type = 'LEAVE' THEN CONCAT('请假 ', IFNULL(l.leave_type, ''), ' ', IFNULL(DATE_FORMAT(l.start_time, '%Y-%m-%d %H:%i'), ''), ' ~ ', IFNULL(DATE_FORMAT(l.end_time, '%Y-%m-%d %H:%i'), ''))
+                           WHEN i.business_type = 'PATCH' THEN CONCAT('补卡 ', IFNULL(p.patch_type, ''), ' ', IFNULL(DATE_FORMAT(p.attendance_date, '%Y-%m-%d'), ''), ' ', IFNULL(DATE_FORMAT(p.patch_time, '%H:%i'), ''))
+                           WHEN i.business_type = 'OVERTIME' THEN CONCAT('加班 ', IFNULL(DATE_FORMAT(o.overtime_date, '%Y-%m-%d'), ''), ' ', IFNULL(DATE_FORMAT(o.start_time, '%H:%i'), ''), ' ~ ', IFNULL(DATE_FORMAT(o.end_time, '%H:%i'), ''))
+                           ELSE ''
+                       END AS businessSummary
                 FROM hr_workflow_task t
                 INNER JOIN hr_workflow_instance i ON t.instance_id = i.id
                 LEFT JOIN hr_leave_apply l ON i.business_type = 'LEAVE' AND i.business_id = l.id
+                LEFT JOIN sys_user ul ON l.user_id = ul.id
+                LEFT JOIN hr_patch_apply p ON i.business_type = 'PATCH' AND i.business_id = p.id
+                LEFT JOIN sys_user up ON p.user_id = up.id
+                LEFT JOIN hr_overtime_apply o ON i.business_type = 'OVERTIME' AND i.business_id = o.id
+                LEFT JOIN sys_user uo ON o.user_id = uo.id
                 LEFT JOIN sys_user u ON i.initiator_id = u.id
                 """ + where + " ORDER BY t.created_time ASC, t.id ASC LIMIT :limit OFFSET :offset";
 
@@ -374,6 +412,20 @@ public class LeaveApplicationController {
         action = action.toUpperCase();
         if (!List.of("APPROVE", "REJECT", "RETURN").contains(action)) {
             return Result.error("不支持的审批动作");
+        }
+
+        String directComment = stringValue(body.get("comment"));
+        if (taskId != null) {
+            try {
+                WorkflowRuntimeService.WorkflowTaskActionResult result =
+                        workflowRuntimeService.handleTaskAction(taskId, currentUserId, action, directComment);
+                syncBusinessStatus(result.businessType(), result.businessId(), result.businessStatus());
+                return Result.success(true);
+            } catch (RuntimeException ex) {
+                return Result.error(ex.getMessage());
+            } catch (Exception ex) {
+                return Result.error("task action failed");
+            }
         }
 
         List<Map<String, Object>> tasks = namedParameterJdbcTemplate.queryForList("""
@@ -772,17 +824,41 @@ public class LeaveApplicationController {
     }
 
     private void syncBusinessStatus(String businessType, Long businessId, String status) {
-        if (!"LEAVE".equalsIgnoreCase(businessType) || businessId == null) {
+        if (businessId == null || !StringUtils.hasText(businessType)) {
             return;
         }
-        namedParameterJdbcTemplate.update("""
-                        UPDATE hr_leave_apply
-                        SET status = :status,
-                            updated_time = NOW()
-                        WHERE id = :id
-                        """,
-                new MapSqlParameterSource().addValue("id", businessId).addValue("status", status)
-        );
+        if ("LEAVE".equalsIgnoreCase(businessType)) {
+            namedParameterJdbcTemplate.update("""
+                            UPDATE hr_leave_apply
+                            SET status = :status,
+                                updated_time = NOW()
+                            WHERE id = :id
+                            """,
+                    new MapSqlParameterSource().addValue("id", businessId).addValue("status", status)
+            );
+            return;
+        }
+        if ("PATCH".equalsIgnoreCase(businessType)) {
+            namedParameterJdbcTemplate.update("""
+                            UPDATE hr_patch_apply
+                            SET status = :status,
+                                updated_time = NOW()
+                            WHERE id = :id
+                            """,
+                    new MapSqlParameterSource().addValue("id", businessId).addValue("status", status)
+            );
+            return;
+        }
+        if ("OVERTIME".equalsIgnoreCase(businessType)) {
+            namedParameterJdbcTemplate.update("""
+                            UPDATE hr_overtime_apply
+                            SET status = :status,
+                                updated_time = NOW()
+                            WHERE id = :id
+                            """,
+                    new MapSqlParameterSource().addValue("id", businessId).addValue("status", status)
+            );
+        }
     }
 
     private boolean isCurrentUserAdmin() {

@@ -862,6 +862,51 @@ CREATE TABLE `hr_leave_apply` (
   KEY `idx_hr_leave_apply_deleted` (`deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `hr_patch_apply` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `apply_no` varchar(50) NOT NULL,
+  `user_id` bigint NOT NULL,
+  `employee_id` bigint DEFAULT NULL,
+  `attendance_date` date NOT NULL,
+  `patch_time` datetime NOT NULL,
+  `patch_type` varchar(20) NOT NULL,
+  `reason` varchar(500) DEFAULT NULL,
+  `status` varchar(30) DEFAULT 'SUBMITTED',
+  `current_instance_id` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_patch_apply_no` (`apply_no`),
+  KEY `idx_hr_patch_apply_user` (`user_id`),
+  KEY `idx_hr_patch_apply_date` (`attendance_date`),
+  KEY `idx_hr_patch_apply_status` (`status`),
+  KEY `idx_hr_patch_apply_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_overtime_apply` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `apply_no` varchar(50) NOT NULL,
+  `user_id` bigint NOT NULL,
+  `employee_id` bigint DEFAULT NULL,
+  `overtime_date` date NOT NULL,
+  `start_time` datetime NOT NULL,
+  `end_time` datetime NOT NULL,
+  `hours` decimal(6,2) DEFAULT 0.00,
+  `reason` varchar(500) DEFAULT NULL,
+  `status` varchar(30) DEFAULT 'SUBMITTED',
+  `current_instance_id` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_overtime_apply_no` (`apply_no`),
+  KEY `idx_hr_overtime_apply_user` (`user_id`),
+  KEY `idx_hr_overtime_apply_date` (`overtime_date`),
+  KEY `idx_hr_overtime_apply_status` (`status`),
+  KEY `idx_hr_overtime_apply_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE `hr_workflow_template` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `template_name` varchar(100) NOT NULL,
@@ -883,6 +928,8 @@ CREATE TABLE `hr_workflow_template_node` (
   `template_id` bigint NOT NULL,
   `node_order` int NOT NULL,
   `node_name` varchar(100) NOT NULL,
+  `node_type` varchar(20) DEFAULT 'APPROVAL',
+  `approval_mode` varchar(20) DEFAULT 'ANY',
   `approver_type` varchar(30) NOT NULL,
   `approver_role_code` varchar(50) DEFAULT NULL,
   `approver_user_id` bigint DEFAULT NULL,
@@ -894,6 +941,40 @@ CREATE TABLE `hr_workflow_template_node` (
   PRIMARY KEY (`id`),
   KEY `idx_hr_workflow_template_node_tid` (`template_id`),
   KEY `idx_hr_workflow_template_node_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_workflow_template_node_approver` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `template_node_id` bigint NOT NULL,
+  `approver_order` int DEFAULT 1,
+  `approver_type` varchar(30) NOT NULL,
+  `approver_role_code` varchar(50) DEFAULT NULL,
+  `approver_user_id` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_wf_node_approver_node` (`template_node_id`),
+  KEY `idx_hr_wf_node_approver_type` (`approver_type`),
+  KEY `idx_hr_wf_node_approver_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_workflow_template_node_cc` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `template_node_id` bigint NOT NULL,
+  `cc_order` int DEFAULT 1,
+  `cc_type` varchar(30) NOT NULL,
+  `cc_role_code` varchar(50) DEFAULT NULL,
+  `cc_user_id` bigint DEFAULT NULL,
+  `cc_dept_id` bigint DEFAULT NULL,
+  `cc_timing` varchar(30) DEFAULT 'AFTER_APPROVAL',
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_wf_node_cc_node` (`template_node_id`),
+  KEY `idx_hr_wf_node_cc_type` (`cc_type`),
+  KEY `idx_hr_wf_node_cc_deleted` (`deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `hr_workflow_instance` (
@@ -1256,12 +1337,25 @@ VALUES
 
 INSERT INTO `hr_workflow_template` (`id`, `template_name`, `business_type`, `status`, `version_no`, `remark`, `deleted`)
 VALUES
-  (1, '请假审批流程V1', 'LEAVE', 'ENABLED', 1, '默认请假流程模板', 0);
+  (1, '请假审批流程V1', 'LEAVE', 'ENABLED', 1, '默认请假流程模板', 0),
+  (2, '补卡审批流程V1', 'PATCH', 'ENABLED', 1, '默认补卡流程模板', 0),
+  (3, '加班审批流程V1', 'OVERTIME', 'ENABLED', 1, '默认加班流程模板', 0);
 
-INSERT INTO `hr_workflow_template_node` (`id`, `template_id`, `node_order`, `node_name`, `approver_type`, `approver_role_code`, `approver_user_id`, `condition_expression`, `required_flag`, `deleted`)
+INSERT INTO `hr_workflow_template_node` (`id`, `template_id`, `node_order`, `node_name`, `node_type`, `approval_mode`, `approver_type`, `approver_role_code`, `approver_user_id`, `condition_expression`, `required_flag`, `deleted`)
 VALUES
-  (1, 1, 1, '直属主管审批', 'DIRECT_LEADER', NULL, NULL, NULL, 1, 0),
-  (2, 1, 2, 'HR审批', 'SPECIFIED_ROLE', 'HR', NULL, 'days > 3', 1, 0);
+  (1, 1, 1, '直属主管审批', 'APPROVAL', 'ANY', 'DIRECT_LEADER', NULL, NULL, NULL, 1, 0),
+  (2, 1, 2, 'HR审批', 'APPROVAL', 'ANY', 'SPECIFIED_ROLE', 'HR', NULL, 'days > 3', 1, 0),
+  (3, 2, 1, '直属主管审批', 'APPROVAL', 'ANY', 'DIRECT_LEADER', NULL, NULL, NULL, 1, 0),
+  (4, 3, 1, '直属主管审批', 'APPROVAL', 'ANY', 'DIRECT_LEADER', NULL, NULL, NULL, 1, 0),
+  (5, 3, 2, 'HR审批', 'APPROVAL', 'ANY', 'SPECIFIED_ROLE', 'HR', NULL, 'hours > 3', 1, 0);
+
+INSERT INTO `hr_workflow_template_node_approver` (`id`, `template_node_id`, `approver_order`, `approver_type`, `approver_role_code`, `approver_user_id`, `deleted`)
+VALUES
+  (1, 1, 1, 'DIRECT_LEADER', NULL, NULL, 0),
+  (2, 2, 1, 'SPECIFIED_ROLE', 'HR', NULL, 0),
+  (3, 3, 1, 'DIRECT_LEADER', NULL, NULL, 0),
+  (4, 4, 1, 'DIRECT_LEADER', NULL, NULL, 0),
+  (5, 5, 1, 'SPECIFIED_ROLE', 'HR', NULL, 0);
 
 INSERT INTO `hr_leave_apply` (`id`, `apply_no`, `user_id`, `employee_id`, `leave_type`, `start_time`, `end_time`, `leave_days`, `reason`, `status`, `current_instance_id`, `deleted`)
 VALUES

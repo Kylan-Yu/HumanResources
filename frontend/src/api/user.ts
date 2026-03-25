@@ -66,3 +66,11 @@ export const updateUserCustomField = (id: number, data: any) => {
 export const deleteUserCustomField = (id: number) => {
   return del<boolean>(`/users/custom-fields/${id}`)
 }
+
+export const getUserProfile = () => {
+  return get<any>('/user/profile')
+}
+
+export const updateUserProfile = (data: any) => {
+  return put<boolean>('/user/profile', data)
+}

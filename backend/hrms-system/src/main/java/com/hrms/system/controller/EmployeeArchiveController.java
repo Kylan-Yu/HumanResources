@@ -2,6 +2,7 @@ package com.hrms.system.controller;
 
 import com.hrms.common.PageResult;
 import com.hrms.common.Result;
+import com.hrms.system.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -124,6 +126,62 @@ public class EmployeeArchiveController {
                 pageNum,
                 pageSize
         ));
+    }
+
+    @GetMapping("/team/page")
+    public Result<PageResult<Map<String, Object>>> teamPage(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String keyword
+    ) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            return Result.error("未获取到当前用户");
+        }
+
+        Long deptId = resolveCurrentUserDeptId(currentUserId);
+        if (deptId == null) {
+            return Result.error("未配置部门信息，无法查看团队成员");
+        }
+
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("deptId", deptId);
+        StringBuilder where = new StringBuilder("""
+                WHERE e.deleted = 0
+                  AND j.deleted = 0
+                  AND j.is_main_job = 1
+                  AND j.dept_id = :deptId
+                """);
+        if (StringUtils.hasText(keyword)) {
+            where.append(" AND (e.name LIKE :keyword OR e.mobile LIKE :keyword OR p.position_name LIKE :keyword) ");
+            params.addValue("keyword", "%" + keyword + "%");
+        }
+
+        Long total = namedParameterJdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM hr_employee e INNER JOIN hr_employee_job j ON e.id = j.employee_id LEFT JOIN hr_position p ON j.position_id = p.id " + where,
+                params,
+                Long.class
+        );
+        if (total == null) {
+            total = 0L;
+        }
+
+        params.addValue("limit", pageSize);
+        params.addValue("offset", (pageNum - 1) * pageSize);
+        String sql = """
+                SELECT e.id AS employeeId,
+                       e.employee_no AS employeeNo,
+                       e.name AS employeeName,
+                       p.position_name AS positionName,
+                       e.mobile AS mobile,
+                       j.entry_date AS entryDate
+                FROM hr_employee e
+                INNER JOIN hr_employee_job j ON e.id = j.employee_id
+                LEFT JOIN hr_position p ON j.position_id = p.id
+                """ + where + """
+                ORDER BY j.entry_date DESC, e.id DESC
+                LIMIT :limit OFFSET :offset
+                """;
+        return Result.success(PageResult.of(namedParameterJdbcTemplate.queryForList(sql, params), total, pageNum, pageSize));
     }
 
     @GetMapping("/{id}")
@@ -335,6 +393,51 @@ public class EmployeeArchiveController {
 
     private Object valueOrDefault(Object value, Object defaultValue) {
         return value == null ? defaultValue : value;
+    }
+
+    private Long resolveCurrentUserDeptId(Long userId) {
+        List<Map<String, Object>> users = namedParameterJdbcTemplate.queryForList(
+                "SELECT ext_json AS extJson FROM sys_user WHERE id = :id AND deleted = 0",
+                new MapSqlParameterSource("id", userId)
+        );
+        if (users.isEmpty()) {
+            return null;
+        }
+        return extractLongFromJson(users.get(0).get("extJson"), "deptId");
+    }
+
+    private Long extractLongFromJson(Object jsonObject, String key) {
+        if (jsonObject == null || !StringUtils.hasText(key)) {
+            return null;
+        }
+        String text = String.valueOf(jsonObject);
+        int idx = text.indexOf("\"" + key + "\"");
+        if (idx < 0) {
+            return null;
+        }
+        String right = text.substring(idx);
+        int colon = right.indexOf(':');
+        if (colon < 0) {
+            return null;
+        }
+        String numberPart = right.substring(colon + 1).trim();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < numberPart.length(); i++) {
+            char c = numberPart.charAt(i);
+            if (Character.isDigit(c)) {
+                builder.append(c);
+            } else if (builder.length() > 0) {
+                break;
+            }
+        }
+        if (builder.isEmpty()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(builder.toString());
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }
 

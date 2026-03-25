@@ -2,6 +2,7 @@ package com.hrms.system.controller;
 
 import com.hrms.common.PageResult;
 import com.hrms.common.Result;
+import com.hrms.system.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -492,6 +493,138 @@ public class AttendanceController {
         return Result.success(rows > 0);
     }
 
+    @GetMapping("/my/page")
+    public Result<PageResult<Map<String, Object>>> myAttendancePage(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String month
+    ) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            return Result.error("未获取到当前用户");
+        }
+
+        Long employeeId = resolveEmployeeIdByUserId(currentUserId);
+        if (employeeId == null) {
+            return Result.success(PageResult.of(List.of(), 0L, pageNum, pageSize));
+        }
+
+        String targetMonth = StringUtils.hasText(month) ? month : YearMonth.now().toString();
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("employeeId", employeeId)
+                .addValue("month", targetMonth);
+
+        Long total = namedParameterJdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM hr_attendance_record WHERE deleted = 0 AND employee_id = :employeeId AND DATE_FORMAT(attendance_date, '%Y-%m') = :month",
+                params,
+                Long.class
+        );
+        if (total == null) {
+            total = 0L;
+        }
+
+        params.addValue("limit", pageSize);
+        params.addValue("offset", (pageNum - 1) * pageSize);
+        String sql = """
+                SELECT id,
+                       attendance_date AS attendanceDate,
+                       check_in_time AS checkInTime,
+                       check_out_time AS checkOutTime,
+                       attendance_status AS attendanceStatus,
+                       late_minutes AS lateMinutes,
+                       early_leave_minutes AS earlyLeaveMinutes,
+                       CASE
+                           WHEN check_in_time IS NULL OR check_out_time IS NULL THEN 1
+                           ELSE 0
+                       END AS missingCardFlag,
+                       created_time AS createdTime
+                FROM hr_attendance_record
+                WHERE deleted = 0
+                  AND employee_id = :employeeId
+                  AND DATE_FORMAT(attendance_date, '%Y-%m') = :month
+                ORDER BY attendance_date DESC, id DESC
+                LIMIT :limit OFFSET :offset
+                """;
+        return Result.success(PageResult.of(namedParameterJdbcTemplate.queryForList(sql, params), total, pageNum, pageSize));
+    }
+
+    @GetMapping("/team/summary")
+    public Result<PageResult<Map<String, Object>>> teamSummary(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) String keyword
+    ) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            return Result.error("未获取到当前用户");
+        }
+
+        boolean hrOrAdmin = hasAnyRole(currentUserId, "HR", "ADMIN");
+        boolean managerRole = hasAnyRole(currentUserId, "MANAGER");
+        if (!hrOrAdmin && !managerRole) {
+            return Result.error("当前角色无权限查看团队考勤");
+        }
+
+        Long deptId = resolveCurrentUserDeptId(currentUserId);
+        if (!hrOrAdmin && deptId == null) {
+            return Result.error("未配置部门信息，无法查询团队考勤");
+        }
+
+        String targetMonth = StringUtils.hasText(month) ? month : YearMonth.now().toString();
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("month", targetMonth);
+        StringBuilder where = new StringBuilder("""
+                WHERE e.deleted = 0
+                  AND j.deleted = 0
+                  AND j.is_main_job = 1
+                """);
+        if (!hrOrAdmin) {
+            where.append(" AND j.dept_id = :deptId ");
+            params.addValue("deptId", deptId);
+        }
+        if (StringUtils.hasText(keyword)) {
+            where.append(" AND (e.employee_no LIKE :keyword OR e.name LIKE :keyword) ");
+            params.addValue("keyword", "%" + keyword + "%");
+        }
+
+        Long total = namedParameterJdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM hr_employee e INNER JOIN hr_employee_job j ON e.id = j.employee_id " + where,
+                params,
+                Long.class
+        );
+        if (total == null) {
+            total = 0L;
+        }
+
+        params.addValue("limit", pageSize);
+        params.addValue("offset", (pageNum - 1) * pageSize);
+        String sql = """
+                SELECT e.id AS employeeId,
+                       e.employee_no AS employeeNo,
+                       e.name AS employeeName,
+                       p.position_name AS positionName,
+                       COUNT(r.id) AS totalDays,
+                       SUM(CASE WHEN r.attendance_status IN ('NORMAL','LATE','EARLY_LEAVE','LATE_EARLY') THEN 1 ELSE 0 END) AS attendedDays,
+                       SUM(CASE WHEN r.attendance_status IN ('LATE','LATE_EARLY') THEN 1 ELSE 0 END) AS lateDays,
+                       SUM(CASE WHEN r.attendance_status IN ('EARLY_LEAVE','LATE_EARLY') THEN 1 ELSE 0 END) AS earlyLeaveDays,
+                       SUM(CASE WHEN r.attendance_status = 'ABSENT' THEN 1 ELSE 0 END) AS absentDays,
+                       SUM(CASE WHEN r.check_in_time IS NULL OR r.check_out_time IS NULL THEN 1 ELSE 0 END) AS missingCardDays,
+                       ROUND(SUM(IFNULL(r.overtime_minutes, 0)) / 60, 2) AS overtimeHours
+                FROM hr_employee e
+                INNER JOIN hr_employee_job j ON e.id = j.employee_id
+                LEFT JOIN hr_position p ON j.position_id = p.id
+                LEFT JOIN hr_attendance_record r
+                       ON r.employee_id = e.id
+                      AND r.deleted = 0
+                      AND DATE_FORMAT(r.attendance_date, '%Y-%m') = :month
+                """ + where + """
+                GROUP BY e.id, e.employee_no, e.name, p.position_name
+                ORDER BY e.name ASC, e.id ASC
+                LIMIT :limit OFFSET :offset
+                """;
+        return Result.success(PageResult.of(namedParameterJdbcTemplate.queryForList(sql, params), total, pageNum, pageSize));
+    }
+
     @GetMapping("/statistics/monthly")
     public Result<List<Map<String, Object>>> monthlyStatistics(@RequestParam(required = false) String month) {
         String targetMonth = StringUtils.hasText(month) ? month : YearMonth.now().toString();
@@ -513,6 +646,124 @@ public class AttendanceController {
                 ORDER BY e.employee_no ASC
                 """;
         return Result.success(namedParameterJdbcTemplate.queryForList(sql, new MapSqlParameterSource("month", targetMonth)));
+    }
+
+    private Long resolveEmployeeIdByUserId(Long userId) {
+        List<Map<String, Object>> users = namedParameterJdbcTemplate.queryForList(
+                "SELECT phone, email, ext_json AS extJson FROM sys_user WHERE id = :id AND deleted = 0",
+                new MapSqlParameterSource("id", userId)
+        );
+        if (users.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Object> user = users.get(0);
+        Long employeeId = extractLongFromJson(user.get("extJson"), "employeeId");
+        if (employeeId != null) {
+            return employeeId;
+        }
+
+        List<Map<String, Object>> leaveRows = namedParameterJdbcTemplate.queryForList(
+                "SELECT employee_id AS employeeId FROM hr_leave_apply WHERE user_id = :userId AND employee_id IS NOT NULL AND deleted = 0 ORDER BY id DESC LIMIT 1",
+                new MapSqlParameterSource("userId", userId)
+        );
+        if (!leaveRows.isEmpty()) {
+            return toLong(leaveRows.get(0).get("employeeId"));
+        }
+
+        String phone = stringValue(user.get("phone"));
+        String email = stringValue(user.get("email"));
+        if (!StringUtils.hasText(phone) && !StringUtils.hasText(email)) {
+            return null;
+        }
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        StringBuilder sql = new StringBuilder("""
+                SELECT id
+                FROM hr_employee
+                WHERE deleted = 0
+                """);
+        if (StringUtils.hasText(phone)) {
+            sql.append(" AND mobile = :phone ");
+            params.addValue("phone", phone);
+        }
+        if (StringUtils.hasText(email)) {
+            if (StringUtils.hasText(phone)) {
+                sql.append(" OR (deleted = 0 AND email = :email) ");
+            } else {
+                sql.append(" AND email = :email ");
+            }
+            params.addValue("email", email);
+        }
+        sql.append(" ORDER BY id ASC LIMIT 1 ");
+        List<Map<String, Object>> rows = namedParameterJdbcTemplate.queryForList(sql.toString(), params);
+        return rows.isEmpty() ? null : toLong(rows.get(0).get("id"));
+    }
+
+    private Long resolveCurrentUserDeptId(Long userId) {
+        List<Map<String, Object>> users = namedParameterJdbcTemplate.queryForList(
+                "SELECT ext_json AS extJson FROM sys_user WHERE id = :id AND deleted = 0",
+                new MapSqlParameterSource("id", userId)
+        );
+        if (users.isEmpty()) {
+            return null;
+        }
+        return extractLongFromJson(users.get(0).get("extJson"), "deptId");
+    }
+
+    private boolean hasAnyRole(Long userId, String... roleCodes) {
+        if (roleCodes == null || roleCodes.length == 0) {
+            return false;
+        }
+        Long count = namedParameterJdbcTemplate.queryForObject("""
+                        SELECT COUNT(*)
+                        FROM sys_user_role ur
+                        INNER JOIN sys_role r ON ur.role_id = r.id
+                        WHERE ur.user_id = :userId
+                          AND r.deleted = 0
+                          AND r.status = 1
+                          AND r.role_code IN (:roleCodes)
+                        """,
+                new MapSqlParameterSource()
+                        .addValue("userId", userId)
+                        .addValue("roleCodes", List.of(roleCodes)),
+                Long.class
+        );
+        return count != null && count > 0;
+    }
+
+    private Long extractLongFromJson(Object jsonObject, String key) {
+        if (jsonObject == null || !StringUtils.hasText(key)) {
+            return null;
+        }
+        String text = String.valueOf(jsonObject);
+        int idx = text.indexOf("\"" + key + "\"");
+        if (idx < 0) {
+            return null;
+        }
+        String right = text.substring(idx);
+        int colon = right.indexOf(':');
+        if (colon < 0) {
+            return null;
+        }
+        String numberPart = right.substring(colon + 1).trim();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < numberPart.length(); i++) {
+            char c = numberPart.charAt(i);
+            if (Character.isDigit(c)) {
+                builder.append(c);
+            } else if (builder.length() > 0) {
+                break;
+            }
+        }
+        if (builder.isEmpty()) {
+            return null;
+        }
+        try {
+            return Long.valueOf(builder.toString());
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private AttendanceMetric calculateMetric(String attendanceDate, Long shiftId, String checkInText, String checkOutText) {

@@ -21,7 +21,7 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
-import { get, post, put, del } from '../../utils/request'
+import { get, post, put, del } from '../../../utils/request'
 
 interface Role {
   id: number

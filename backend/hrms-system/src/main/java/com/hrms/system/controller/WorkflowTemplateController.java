@@ -9,9 +9,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Workflow template APIs.
@@ -167,6 +172,24 @@ public class WorkflowTemplateController {
                 "UPDATE hr_workflow_template SET deleted = 1, updated_time = NOW() WHERE id = :id AND deleted = 0",
                 new MapSqlParameterSource("id", id)
         );
+        namedParameterJdbcTemplate.update("""
+                        UPDATE hr_workflow_template_node_approver a
+                        INNER JOIN hr_workflow_template_node n ON a.template_node_id = n.id
+                        SET a.deleted = 1,
+                            a.updated_time = NOW()
+                        WHERE n.template_id = :templateId
+                        """,
+                new MapSqlParameterSource("templateId", id)
+        );
+        namedParameterJdbcTemplate.update("""
+                        UPDATE hr_workflow_template_node_cc c
+                        INNER JOIN hr_workflow_template_node n ON c.template_node_id = n.id
+                        SET c.deleted = 1,
+                            c.updated_time = NOW()
+                        WHERE n.template_id = :templateId
+                        """,
+                new MapSqlParameterSource("templateId", id)
+        );
         namedParameterJdbcTemplate.update(
                 "UPDATE hr_workflow_template_node SET deleted = 1, updated_time = NOW() WHERE template_id = :templateId",
                 new MapSqlParameterSource("templateId", id)
@@ -182,6 +205,8 @@ public class WorkflowTemplateController {
                                template_id AS templateId,
                                node_order AS nodeOrder,
                                node_name AS nodeName,
+                               IFNULL(node_type, 'APPROVAL') AS nodeType,
+                               IFNULL(approval_mode, 'ANY') AS approvalMode,
                                approver_type AS approverType,
                                approver_role_code AS approverRoleCode,
                                approver_user_id AS approverUserId,
@@ -195,6 +220,33 @@ public class WorkflowTemplateController {
                         """,
                 new MapSqlParameterSource("templateId", id)
         );
+
+        if (rows.isEmpty()) {
+            return Result.success(rows);
+        }
+
+        List<Long> nodeIds = rows.stream()
+                .map(row -> toLong(row.get("id")))
+                .filter(Objects::nonNull)
+                .toList();
+
+        Map<Long, List<Map<String, Object>>> approverMap = loadApproverMap(nodeIds);
+        Map<Long, List<Map<String, Object>>> ccMap = loadCcMap(nodeIds);
+
+        for (Map<String, Object> row : rows) {
+            Long nodeId = toLong(row.get("id"));
+            List<Map<String, Object>> approvers = new ArrayList<>(approverMap.getOrDefault(nodeId, Collections.emptyList()));
+            if (approvers.isEmpty() && StringUtils.hasText(stringValue(row.get("approverType")))) {
+                Map<String, Object> fallback = new LinkedHashMap<>();
+                fallback.put("approverOrder", 1);
+                fallback.put("approverType", row.get("approverType"));
+                fallback.put("approverRoleCode", row.get("approverRoleCode"));
+                fallback.put("approverUserId", row.get("approverUserId"));
+                approvers.add(fallback);
+            }
+            row.put("approvers", approvers);
+            row.put("ccUsers", new ArrayList<>(ccMap.getOrDefault(nodeId, Collections.emptyList())));
+        }
         return Result.success(rows);
     }
 
@@ -205,33 +257,210 @@ public class WorkflowTemplateController {
             nodes = Collections.emptyList();
         }
 
+        namedParameterJdbcTemplate.update("""
+                        UPDATE hr_workflow_template_node_approver a
+                        INNER JOIN hr_workflow_template_node n ON a.template_node_id = n.id
+                        SET a.deleted = 1,
+                            a.updated_time = NOW()
+                        WHERE n.template_id = :templateId
+                        """,
+                new MapSqlParameterSource("templateId", id)
+        );
+        namedParameterJdbcTemplate.update("""
+                        UPDATE hr_workflow_template_node_cc c
+                        INNER JOIN hr_workflow_template_node n ON c.template_node_id = n.id
+                        SET c.deleted = 1,
+                            c.updated_time = NOW()
+                        WHERE n.template_id = :templateId
+                        """,
+                new MapSqlParameterSource("templateId", id)
+        );
         namedParameterJdbcTemplate.update(
                 "UPDATE hr_workflow_template_node SET deleted = 1, updated_time = NOW() WHERE template_id = :templateId",
                 new MapSqlParameterSource("templateId", id)
         );
 
         for (Map<String, Object> node : nodes) {
+            String nodeType = normalizeNodeType(stringValue(node.get("nodeType")));
+            String approvalMode = normalizeApprovalMode(stringValue(node.get("approvalMode")));
+            List<Map<String, Object>> approvers = toMapList(node.get("approvers"));
+            List<Map<String, Object>> ccUsers = toMapList(node.get("ccUsers"));
+            if (ccUsers.isEmpty()) {
+                ccUsers = toMapList(node.get("ccs"));
+            }
+
+            if (approvers.isEmpty()
+                    && "APPROVAL".equals(nodeType)
+                    && StringUtils.hasText(stringValue(node.get("approverType")))) {
+                Map<String, Object> fallback = new LinkedHashMap<>();
+                fallback.put("approverType", node.get("approverType"));
+                fallback.put("approverRoleCode", node.get("approverRoleCode"));
+                fallback.put("approverUserId", node.get("approverUserId"));
+                approvers = List.of(fallback);
+            }
+
+            Map<String, Object> firstApprover = approvers.isEmpty() ? null : approvers.get(0);
             namedParameterJdbcTemplate.update("""
                             INSERT INTO hr_workflow_template_node
-                                (template_id, node_order, node_name, approver_type, approver_role_code, approver_user_id,
+                                (template_id, node_order, node_name, node_type, approval_mode,
+                                 approver_type, approver_role_code, approver_user_id,
                                  condition_expression, required_flag, created_time, updated_time, deleted)
                             VALUES
-                                (:templateId, :nodeOrder, :nodeName, :approverType, :approverRoleCode, :approverUserId,
+                                (:templateId, :nodeOrder, :nodeName, :nodeType, :approvalMode,
+                                 :approverType, :approverRoleCode, :approverUserId,
                                  :conditionExpression, :requiredFlag, NOW(), NOW(), 0)
                             """,
                     new MapSqlParameterSource()
                             .addValue("templateId", id)
                             .addValue("nodeOrder", valueOrDefault(node.get("nodeOrder"), 1))
                             .addValue("nodeName", node.get("nodeName"))
-                            .addValue("approverType", valueOrDefault(node.get("approverType"), "DIRECT_LEADER"))
-                            .addValue("approverRoleCode", node.get("approverRoleCode"))
-                            .addValue("approverUserId", node.get("approverUserId"))
+                            .addValue("nodeType", nodeType)
+                            .addValue("approvalMode", approvalMode)
+                            .addValue("approverType", firstApprover == null ? null : firstApprover.get("approverType"))
+                            .addValue("approverRoleCode", firstApprover == null ? null : firstApprover.get("approverRoleCode"))
+                            .addValue("approverUserId", firstApprover == null ? null : firstApprover.get("approverUserId"))
                             .addValue("conditionExpression", node.get("conditionExpression"))
                             .addValue("requiredFlag", valueOrDefault(node.get("requiredFlag"), 1))
             );
+
+            Long templateNodeId = namedParameterJdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", new MapSqlParameterSource(), Long.class);
+            if (templateNodeId == null) {
+                continue;
+            }
+
+            for (int i = 0; i < approvers.size(); i++) {
+                Map<String, Object> approver = approvers.get(i);
+                namedParameterJdbcTemplate.update("""
+                                INSERT INTO hr_workflow_template_node_approver
+                                    (template_node_id, approver_order, approver_type, approver_role_code, approver_user_id,
+                                     created_time, updated_time, deleted)
+                                VALUES
+                                    (:nodeId, :approverOrder, :approverType, :approverRoleCode, :approverUserId,
+                                     NOW(), NOW(), 0)
+                                """,
+                        new MapSqlParameterSource()
+                                .addValue("nodeId", templateNodeId)
+                                .addValue("approverOrder", valueOrDefault(approver.get("approverOrder"), i + 1))
+                                .addValue("approverType", approver.get("approverType"))
+                                .addValue("approverRoleCode", approver.get("approverRoleCode"))
+                                .addValue("approverUserId", approver.get("approverUserId"))
+                );
+            }
+
+            for (int i = 0; i < ccUsers.size(); i++) {
+                Map<String, Object> cc = ccUsers.get(i);
+                namedParameterJdbcTemplate.update("""
+                                INSERT INTO hr_workflow_template_node_cc
+                                    (template_node_id, cc_order, cc_type, cc_role_code, cc_user_id, cc_dept_id, cc_timing,
+                                     created_time, updated_time, deleted)
+                                VALUES
+                                    (:nodeId, :ccOrder, :ccType, :ccRoleCode, :ccUserId, :ccDeptId, :ccTiming,
+                                     NOW(), NOW(), 0)
+                                """,
+                        new MapSqlParameterSource()
+                                .addValue("nodeId", templateNodeId)
+                                .addValue("ccOrder", valueOrDefault(cc.get("ccOrder"), i + 1))
+                                .addValue("ccType", valueOrDefault(cc.get("ccType"), "SPECIFIED_USER"))
+                                .addValue("ccRoleCode", cc.get("ccRoleCode"))
+                                .addValue("ccUserId", cc.get("ccUserId"))
+                                .addValue("ccDeptId", cc.get("ccDeptId"))
+                                .addValue("ccTiming", valueOrDefault(cc.get("ccTiming"), "AFTER_APPROVAL"))
+                );
+            }
         }
 
         return Result.success(true);
+    }
+
+    private Map<Long, List<Map<String, Object>>> loadApproverMap(List<Long> nodeIds) {
+        if (nodeIds == null || nodeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Map<String, Object>> approvers = namedParameterJdbcTemplate.queryForList("""
+                        SELECT template_node_id AS nodeId,
+                               approver_order AS approverOrder,
+                               approver_type AS approverType,
+                               approver_role_code AS approverRoleCode,
+                               approver_user_id AS approverUserId
+                        FROM hr_workflow_template_node_approver
+                        WHERE template_node_id IN (:nodeIds)
+                          AND deleted = 0
+                        ORDER BY template_node_id ASC, approver_order ASC, id ASC
+                        """,
+                new MapSqlParameterSource("nodeIds", nodeIds)
+        );
+
+        return approvers.stream()
+                .collect(Collectors.groupingBy(
+                        row -> toLong(row.get("nodeId")),
+                        HashMap::new,
+                        Collectors.mapping(row -> new LinkedHashMap<>(row), Collectors.toCollection(ArrayList::new))
+                ));
+    }
+
+    private Map<Long, List<Map<String, Object>>> loadCcMap(List<Long> nodeIds) {
+        if (nodeIds == null || nodeIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Map<String, Object>> ccs = namedParameterJdbcTemplate.queryForList("""
+                        SELECT template_node_id AS nodeId,
+                               cc_order AS ccOrder,
+                               cc_type AS ccType,
+                               cc_role_code AS ccRoleCode,
+                               cc_user_id AS ccUserId,
+                               cc_dept_id AS ccDeptId,
+                               cc_timing AS ccTiming
+                        FROM hr_workflow_template_node_cc
+                        WHERE template_node_id IN (:nodeIds)
+                          AND deleted = 0
+                        ORDER BY template_node_id ASC, cc_order ASC, id ASC
+                        """,
+                new MapSqlParameterSource("nodeIds", nodeIds)
+        );
+
+        return ccs.stream()
+                .collect(Collectors.groupingBy(
+                        row -> toLong(row.get("nodeId")),
+                        HashMap::new,
+                        Collectors.mapping(row -> new LinkedHashMap<>(row), Collectors.toCollection(ArrayList::new))
+                ));
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> toMapList(Object value) {
+        if (!(value instanceof List<?> list) || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object item : list) {
+            if (!(item instanceof Map<?, ?> map)) {
+                continue;
+            }
+            Map<String, Object> castMap = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                castMap.put(String.valueOf(entry.getKey()), entry.getValue());
+            }
+            result.add(castMap);
+        }
+        return result;
+    }
+
+    private String normalizeNodeType(String nodeType) {
+        if (!StringUtils.hasText(nodeType)) {
+            return "APPROVAL";
+        }
+        return "CC".equalsIgnoreCase(nodeType) ? "CC" : "APPROVAL";
+    }
+
+    private String normalizeApprovalMode(String mode) {
+        if (!StringUtils.hasText(mode)) {
+            return "ANY";
+        }
+        mode = mode.toUpperCase();
+        return switch (mode) {
+            case "ALL", "SEQUENTIAL" -> mode;
+            default -> "ANY";
+        };
     }
 
     private Object valueOrDefault(Object value, Object defaultValue) {
@@ -240,5 +469,16 @@ public class WorkflowTemplateController {
 
     private String stringValue(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private Long toLong(Object value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Long.valueOf(String.valueOf(value));
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 }

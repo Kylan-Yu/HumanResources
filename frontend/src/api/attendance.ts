@@ -45,3 +45,9 @@ export const deleteAttendanceAppeal = (id: number) =>
 
 export const getAttendanceMonthlyStats = (params?: any) =>
   get<any[]>('/attendance/statistics/monthly', params)
+
+export const getMyAttendancePage = (params: any) =>
+  get<PageResult<any>>('/attendance/my/page', params)
+
+export const getTeamAttendanceSummaryPage = (params: any) =>
+  get<PageResult<any>>('/attendance/team/summary', params)

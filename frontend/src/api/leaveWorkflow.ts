@@ -26,3 +26,24 @@ export const deleteWorkflowTemplate = (id: number) => del<boolean>(`/workflow/te
 export const getWorkflowTemplateNodes = (id: number) => get<any[]>(`/workflow/templates/${id}/nodes`)
 
 export const saveWorkflowTemplateNodes = (id: number, data: any[]) => post<boolean>(`/workflow/templates/${id}/nodes`, data)
+
+export const getWorkflowRoleList = () => get<any[]>('/roles/list')
+
+export const getWorkflowUserPage = (params: any) => get<PageResult<any>>('/users/page', params)
+
+export const createPatchApplication = (data: any) => post<number>('/patch-applications', data)
+
+export const getPatchMyPage = (params: any) => get<PageResult<any>>('/patch-applications/my/page', params)
+
+export const withdrawPatchApplication = (id: number) => post<boolean>(`/patch-applications/${id}/withdraw`)
+
+export const createOvertimeApplication = (data: any) => post<number>('/overtime-applications', data)
+
+export const getOvertimeMyPage = (params: any) => get<PageResult<any>>('/overtime-applications/my/page', params)
+
+export const withdrawOvertimeApplication = (id: number) => post<boolean>(`/overtime-applications/${id}/withdraw`)
+
+export const getMyApplicationPage = (params: any) => get<PageResult<any>>('/applications/my/page', params)
+
+export const getApplicationProgress = (businessType: string, businessId: number) =>
+  get<any>(`/applications/${businessType}/${businessId}/progress`)

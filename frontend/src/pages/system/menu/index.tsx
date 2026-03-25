@@ -29,7 +29,6 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import type { DataNode } from 'antd/es/tree'
 import { useNavigate } from 'react-router-dom'
-import { get, post, put, del } from '../../utils/request'
 
 interface Menu {
   id: number

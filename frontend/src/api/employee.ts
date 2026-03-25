@@ -41,3 +41,11 @@ export const getEmployeeDetail = (id: number) => {
 export const updateEmployeeStatus = (id: number, status: number) => {
   return put<boolean>(`/employees/${id}/status`, { status })
 }
+
+export const getTeamMemberPage = (params: {
+  pageNum?: number
+  pageSize?: number
+  keyword?: string
+}) => {
+  return get<PageResult<any>>('/employees/team/page', params)
+}

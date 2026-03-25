@@ -30,10 +30,10 @@ spring:
         - id: hrms-system-api
           uri: http://localhost:8082
           predicates:
-            - Path=/users/**,/roles/**,/menus/**,/dicts/**,/org/**,/dept/**,/position/**,/rank/**,/employees/**,/employee-changes/**,/recruit-requirements/**,/payroll-standards/**,/performance/**,/training/**,/attendance/**,/contracts/**,/notices/**,/workflow/**,/leave-applications/**
+            - Path=/users/**,/user/**,/roles/**,/menus/**,/dicts/**,/org/**,/dept/**,/position/**,/rank/**,/employees/**,/employee-changes/**,/recruit-requirements/**,/payroll-standards/**,/performance/**,/training/**,/attendance/**,/contracts/**,/notices/**,/workflow/**,/leave-applications/**,/patch-applications/**,/overtime-applications/**,/applications/**
 
   redis:
-    host: 192.168.15.100
+    host: localhost
     port: 6379
     password:
     database: 0

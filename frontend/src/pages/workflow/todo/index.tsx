@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useState } from 'react'
-import { Button, Card, Drawer, Form, Input, message, Select, Space, Table, Tag } from 'antd'
-import { getLeaveProgress, getTodoTaskPage, workflowTaskAction } from '@/api/leaveWorkflow'
+import React, { useEffect, useState } from 'react'
+import { Button, Card, Drawer, Form, Select, Space, Table, Tag, message } from 'antd'
+import { getApplicationProgress, getTodoTaskPage, workflowTaskAction } from '@/api/leaveWorkflow'
 
 const WorkflowTodoPage: React.FC = () => {
   const [loading, setLoading] = useState(false)
@@ -27,7 +27,7 @@ const WorkflowTodoPage: React.FC = () => {
   }, [])
 
   const openDetail = async (row: any) => {
-    const progress = await getLeaveProgress(row.businessId)
+    const progress = await getApplicationProgress(row.businessType, row.businessId)
     setDetail(progress.data)
     setDetailOpen(true)
   }
@@ -36,8 +36,8 @@ const WorkflowTodoPage: React.FC = () => {
     await workflowTaskAction(row.id, { action })
     message.success('处理成功')
     loadData()
-    if (detail?.application?.id === row.businessId) {
-      const progress = await getLeaveProgress(row.businessId)
+    if (detail?.application?.id === row.businessId && detail?.application?.businessType === row.businessType) {
+      const progress = await getApplicationProgress(row.businessType, row.businessId)
       setDetail(progress.data)
     }
   }
@@ -51,10 +51,20 @@ const WorkflowTodoPage: React.FC = () => {
         style={{ marginBottom: 16 }}
       >
         <Form.Item name="businessType" label="业务类型">
-          <Select allowClear style={{ width: 180 }} options={[{ value: 'LEAVE', label: '请假申请' }]} />
+          <Select
+            allowClear
+            style={{ width: 180 }}
+            options={[
+              { value: 'LEAVE', label: '请假申请' },
+              { value: 'PATCH', label: '补卡申请' },
+              { value: 'OVERTIME', label: '加班申请' }
+            ]}
+          />
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit">查询</Button>
+          <Button type="primary" htmlType="submit">
+            查询
+          </Button>
         </Form.Item>
       </Form>
 
@@ -64,12 +74,11 @@ const WorkflowTodoPage: React.FC = () => {
         dataSource={data.list || []}
         columns={[
           { title: '任务ID', dataIndex: 'id' },
+          { title: '业务类型', dataIndex: 'businessType' },
           { title: '申请单号', dataIndex: 'applyNo' },
           { title: '申请人', dataIndex: 'applicantName' },
           { title: '节点', dataIndex: 'nodeName' },
-          { title: '请假类型', dataIndex: 'leaveType' },
-          { title: '时段', render: (_: any, row: any) => `${row.leaveStartTime || ''} ~ ${row.leaveEndTime || ''}` },
-          { title: '天数', dataIndex: 'leaveDays' },
+          { title: '业务摘要', dataIndex: 'businessSummary' },
           {
             title: '状态',
             dataIndex: 'status',
@@ -79,10 +88,18 @@ const WorkflowTodoPage: React.FC = () => {
             title: '操作',
             render: (_: any, row: any) => (
               <Space>
-                <Button type="link" onClick={() => openDetail(row)}>详情</Button>
-                <Button type="link" onClick={() => doAction(row, 'APPROVE')}>同意</Button>
-                <Button type="link" danger onClick={() => doAction(row, 'REJECT')}>驳回</Button>
-                <Button type="link" onClick={() => doAction(row, 'RETURN')}>退回</Button>
+                <Button type="link" onClick={() => openDetail(row)}>
+                  详情
+                </Button>
+                <Button type="link" onClick={() => doAction(row, 'APPROVE')}>
+                  同意
+                </Button>
+                <Button type="link" danger onClick={() => doAction(row, 'REJECT')}>
+                  驳回
+                </Button>
+                <Button type="link" onClick={() => doAction(row, 'RETURN')}>
+                  退回
+                </Button>
               </Space>
             )
           }
@@ -96,9 +113,18 @@ const WorkflowTodoPage: React.FC = () => {
       />
 
       <Drawer title="审批进度" width={760} open={detailOpen} onClose={() => setDetailOpen(false)}>
-        <p><b>申请单号：</b>{detail?.application?.applyNo}</p>
-        <p><b>当前状态：</b>{detail?.application?.status}</p>
-        <p><b>当前节点：</b>{detail?.instance?.currentNodeName || '-'}</p>
+        <p>
+          <b>申请单号：</b>
+          {detail?.application?.applyNo}
+        </p>
+        <p>
+          <b>当前状态：</b>
+          {detail?.application?.status}
+        </p>
+        <p>
+          <b>当前节点：</b>
+          {detail?.instance?.currentNodeName || '-'}
+        </p>
 
         <h4>任务节点</h4>
         <Table
