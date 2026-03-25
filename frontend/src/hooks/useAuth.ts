@@ -23,8 +23,8 @@ export const useAuth = () => {
     return user.roles.includes(role)
   }
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/login')
   }
 

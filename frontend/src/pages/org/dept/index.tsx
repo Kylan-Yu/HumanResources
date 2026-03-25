@@ -61,10 +61,17 @@ const DeptManagement: React.FC = () => {
   const [editingDept, setEditingDept] = useState<Dept | null>(null)
   const [form] = Form.useForm()
 
+  const authHeaders = () => {
+    const token = localStorage.getItem('token')
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   // 获取组织列表
   const fetchOrgList = async () => {
     try {
-      const response = await fetch('/api/org/list')
+      const response = await fetch('/api/org/list', {
+        headers: authHeaders()
+      })
       const result = await response.json()
       
       if (result.code === 200) {
@@ -81,7 +88,9 @@ const DeptManagement: React.FC = () => {
   const fetchDeptTree = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/dept/tree')
+      const response = await fetch('/api/dept/tree', {
+        headers: authHeaders()
+      })
       const result = await response.json()
       
       if (result.code === 200) {
@@ -140,7 +149,8 @@ const DeptManagement: React.FC = () => {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify(values)
       })
@@ -165,7 +175,8 @@ const DeptManagement: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       const response = await fetch(`/api/dept/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders()
       })
       
       const result = await response.json()
@@ -185,7 +196,8 @@ const DeptManagement: React.FC = () => {
   const handleStatusChange = async (id: number, status: number) => {
     try {
       const response = await fetch(`/api/dept/${id}/status?status=${status}`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: authHeaders()
       })
       
       const result = await response.json()

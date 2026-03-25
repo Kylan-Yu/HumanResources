@@ -32,19 +32,19 @@ public class Org {
     @TableField("parent_id")
     private Long parentId;
 
-    @TableField("legal_person")
+    @TableField(exist = false)
     private String legalPerson;
 
-    @TableField("unified_social_credit_code")
+    @TableField(exist = false)
     private String unifiedSocialCreditCode;
 
-    @TableField("address")
+    @TableField(exist = false)
     private String address;
 
-    @TableField("phone")
+    @TableField(exist = false)
     private String phone;
 
-    @TableField("email")
+    @TableField(exist = false)
     private String email;
 
     @TableField("industry_type")

@@ -10,16 +10,17 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 菜单服务实现
- *
- * @author HRMS
+ * Menu service implementation.
  */
 @Service
 @RequiredArgsConstructor
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements MenuService {
+
+    private static final long ROOT_PARENT_ID = 0L;
 
     private final MenuMapper menuMapper;
 
@@ -30,14 +31,20 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
                 .eq(Menu::getDeleted, 0)
                 .orderByAsc(Menu::getSortOrder)
                 .orderByAsc(Menu::getId);
-        
+
         List<Menu> allMenus = list(wrapper);
-        return buildMenuTree(allMenus, 0L);
+        return buildMenuTree(allMenus, ROOT_PARENT_ID);
     }
 
     @Override
     public List<Menu> getRoleMenus(Long roleId) {
         return menuMapper.selectMenusByRoleId(roleId);
+    }
+
+    @Override
+    public List<Menu> getUserMenuTree(Long userId) {
+        List<Menu> menus = menuMapper.selectUserMenuTree(userId);
+        return buildMenuTree(menus, ROOT_PARENT_ID);
     }
 
     @Override
@@ -51,7 +58,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     public void updateMenu(Menu menu) {
         Menu existingMenu = getById(menu.getId());
         if (existingMenu == null) {
-            throw new RuntimeException("菜单不存在");
+            throw new RuntimeException("Menu does not exist");
         }
 
         menu.setUpdatedTime(LocalDateTime.now());
@@ -62,18 +69,16 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     public void deleteMenu(Long id) {
         Menu menu = getById(id);
         if (menu == null) {
-            throw new RuntimeException("菜单不存在");
+            throw new RuntimeException("Menu does not exist");
         }
 
-        // 检查是否有子菜单
         LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Menu::getParentId, id)
                 .eq(Menu::getDeleted, 0);
         if (count(wrapper) > 0) {
-            throw new RuntimeException("存在子菜单，无法删除");
+            throw new RuntimeException("Menu has child nodes and cannot be deleted");
         }
 
-        // 逻辑删除
         menu.setDeleted(1);
         menu.setUpdatedTime(LocalDateTime.now());
         updateById(menu);
@@ -83,7 +88,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     public void updateMenuStatus(Long id, Integer status) {
         Menu menu = getById(id);
         if (menu == null) {
-            throw new RuntimeException("菜单不存在");
+            throw new RuntimeException("Menu does not exist");
         }
 
         menu.setStatus(status);
@@ -93,22 +98,21 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
 
     @Override
     public void assignRoleMenus(Long roleId, List<Long> menuIds) {
-        // 先删除原有权限
         menuMapper.deleteRoleMenus(roleId);
-        
-        // 分配新权限
         if (menuIds != null && !menuIds.isEmpty()) {
             menuMapper.insertRoleMenus(roleId, menuIds);
         }
     }
 
-    /**
-     * 构建菜单树
-     */
     private List<Menu> buildMenuTree(List<Menu> menus, Long parentId) {
+        Long normalizedParentId = normalizeParentId(parentId);
         return menus.stream()
-                .filter(menu -> parentId.equals(menu.getParentId()))
+                .filter(menu -> Objects.equals(normalizeParentId(menu.getParentId()), normalizedParentId))
                 .peek(menu -> menu.setChildren(buildMenuTree(menus, menu.getId())))
                 .collect(Collectors.toList());
+    }
+
+    private Long normalizeParentId(Long parentId) {
+        return parentId == null ? ROOT_PARENT_ID : parentId;
     }
 }

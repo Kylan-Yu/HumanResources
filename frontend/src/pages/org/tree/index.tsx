@@ -55,11 +55,18 @@ const OrgTree: React.FC = () => {
   const [editingOrg, setEditingOrg] = useState<Org | null>(null)
   const [form] = Form.useForm()
 
+  const authHeaders = () => {
+    const token = localStorage.getItem('token')
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   // 获取组织树
   const fetchOrgTree = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/org/tree')
+      const response = await fetch('/api/org/tree', {
+        headers: authHeaders()
+      })
       const result = await response.json()
       
       if (result.code === 200) {
@@ -117,7 +124,8 @@ const OrgTree: React.FC = () => {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify(values)
       })
@@ -142,7 +150,8 @@ const OrgTree: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       const response = await fetch(`/api/org/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders()
       })
       
       const result = await response.json()
@@ -162,7 +171,8 @@ const OrgTree: React.FC = () => {
   const handleStatusChange = async (id: number, status: number) => {
     try {
       const response = await fetch(`/api/org/${id}/status?status=${status}`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: authHeaders()
       })
       
       const result = await response.json()

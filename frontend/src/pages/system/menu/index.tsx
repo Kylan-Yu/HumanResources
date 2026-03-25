@@ -28,6 +28,8 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { DataNode } from 'antd/es/tree'
+import { useNavigate } from 'react-router-dom'
+import { get, post, put, del } from '../../utils/request'
 
 interface Menu {
   id: number
@@ -58,11 +60,18 @@ const MenuManagement: React.FC = () => {
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null)
   const [form] = Form.useForm()
 
+  const authHeaders = () => {
+    const token = localStorage.getItem('token')
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   // 获取菜单树
   const fetchMenuTree = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/menus/tree')
+      const response = await fetch('/api/menus/tree', {
+        headers: authHeaders()
+      })
       const result = await response.json()
       
       if (result.code === 200) {
@@ -120,7 +129,8 @@ const MenuManagement: React.FC = () => {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify(values)
       })
@@ -145,7 +155,8 @@ const MenuManagement: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       const response = await fetch(`/api/menus/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders()
       })
       
       const result = await response.json()
@@ -165,7 +176,8 @@ const MenuManagement: React.FC = () => {
   const handleStatusChange = async (id: number, status: number) => {
     try {
       const response = await fetch(`/api/menus/${id}/status?status=${status}`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: authHeaders()
       })
       
       const result = await response.json()

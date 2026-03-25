@@ -5,7 +5,15 @@ spring:
   application:
     name: hrms-auth
   profiles:
-    active: minimal
+    active: dev
+  cloud:
+    nacos:
+      config:
+        import-check:
+          enabled: false
+      discovery:
+        server-addr: 192.168.15.100:8848
+        enabled: true
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.15.100:3306/hrms_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
@@ -67,6 +75,6 @@ logging:
 
 # JWT配置
 jwt:
-  secret: hrms-jwt-secret-key-2024-hrms-system
+  secret: hrms-jwt-secret-key-2024-hrms-system-secure-key-for-hs512-algorithm-requirement-abcdefg1234567890
   expiration: 7200  # 访问令牌过期时间（秒）
   refresh-expiration: 604800  # 刷新令牌过期时间（秒）

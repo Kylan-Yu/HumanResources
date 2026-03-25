@@ -111,8 +111,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // 允许访问的端点
                 .requestMatchers(
-                    "/auth/login",
-                    "/auth/refresh",
+                    "/auth/**",
+                    "/api/auth/**",
                     "/doc.html",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",

@@ -67,11 +67,18 @@ const DictManagement: React.FC = () => {
   const [dictForm] = Form.useForm()
   const [dictItemForm] = Form.useForm()
 
+  const authHeaders = () => {
+    const token = localStorage.getItem('token')
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   // 获取字典列表
   const fetchDicts = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/dicts')
+      const response = await fetch('/api/dicts', {
+        headers: authHeaders()
+      })
       const result = await response.json()
       
       if (result.code === 200) {
@@ -92,7 +99,9 @@ const DictManagement: React.FC = () => {
     
     setLoading(true)
     try {
-      const response = await fetch(`/api/dicts/${dictType}/items`)
+      const response = await fetch(`/api/dicts/${dictType}/items`, {
+        headers: authHeaders()
+      })
       const result = await response.json()
       
       if (result.code === 200) {
@@ -120,7 +129,8 @@ const DictManagement: React.FC = () => {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify(values)
       })
@@ -150,7 +160,8 @@ const DictManagement: React.FC = () => {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...authHeaders()
         },
         body: JSON.stringify({ ...values, dictType: selectedDictType })
       })
@@ -175,7 +186,8 @@ const DictManagement: React.FC = () => {
   const handleDeleteDict = async (id: number) => {
     try {
       const response = await fetch(`/api/dicts/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders()
       })
       
       const result = await response.json()
@@ -195,7 +207,8 @@ const DictManagement: React.FC = () => {
   const handleDeleteDictItem = async (id: number) => {
     try {
       const response = await fetch(`/api/dicts/items/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authHeaders()
       })
       
       const result = await response.json()

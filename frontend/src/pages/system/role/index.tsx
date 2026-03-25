@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
+import { get, post, put, del } from '../../utils/request'
 
 interface Role {
   id: number
@@ -51,16 +52,15 @@ const RoleManagement: React.FC = () => {
   const fetchRoles = async (params: any = {}) => {
     setLoading(true)
     try {
-      const queryParams = new URLSearchParams({
-        pageNum: String(params.pageNum || currentPage),
-        pageSize: String(params.pageSize || pageSize),
+      const queryParams = {
+        pageNum: params.pageNum || currentPage,
+        pageSize: params.pageSize || pageSize,
         ...(params.roleName && { roleName: params.roleName }),
         ...(params.roleCode && { roleCode: params.roleCode }),
-        ...(params.status !== undefined && { status: String(params.status) })
-      })
+        ...(params.status !== undefined && { status: params.status })
+      }
 
-      const response = await fetch(`/api/roles/page?${queryParams}`)
-      const result = await response.json()
+      const result = await get('/roles/page', queryParams)
       
       if (result.code === 200) {
         setData(result.data.records)
@@ -82,18 +82,9 @@ const RoleManagement: React.FC = () => {
   // 创建或更新角色
   const handleSave = async (values: any) => {
     try {
-      const url = editingRole ? `/api/roles/${editingRole.id}` : '/api/roles'
-      const method = editingRole ? 'PUT' : 'POST'
+      const url = editingRole ? `/roles/${editingRole.id}` : '/roles'
       
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(values)
-      })
-      
-      const result = await response.json()
+      const result = editingRole ? await put(url, values) : await post(url, values)
       
       if (result.code === 200) {
         message.success(editingRole ? '更新成功' : '创建成功')
@@ -112,11 +103,7 @@ const RoleManagement: React.FC = () => {
   // 删除角色
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`/api/roles/${id}`, {
-        method: 'DELETE'
-      })
-      
-      const result = await response.json()
+      const result = await del(`/roles/${id}`)
       
       if (result.code === 200) {
         message.success('删除成功')
@@ -132,11 +119,7 @@ const RoleManagement: React.FC = () => {
   // 更新角色状态
   const handleStatusChange = async (id: number, status: number) => {
     try {
-      const response = await fetch(`/api/roles/${id}/status?status=${status}`, {
-        method: 'PUT'
-      })
-      
-      const result = await response.json()
+      const result = await put(`/roles/${id}/status`, { status })
       
       if (result.code === 200) {
         message.success('状态更新成功')

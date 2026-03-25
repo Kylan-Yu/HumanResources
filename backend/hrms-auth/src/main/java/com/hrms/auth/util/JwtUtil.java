@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,7 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:hrms-jwt-secret-key-2024}")
+    @Value("${jwt.secret:hrms-jwt-secret-key-2024-hrms-system-secure-key-for-hs512-algorithm-requirement-abcdefg1234567890}")
     private String secret;
 
     @Value("${jwt.expiration:7200}")
@@ -30,7 +31,7 @@ public class JwtUtil {
     private Long refreshExpiration;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     /**

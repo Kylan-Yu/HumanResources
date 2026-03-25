@@ -19,21 +19,21 @@ public interface MenuMapper extends BaseMapper<Menu> {
     /**
      * 查询所有菜单
      */
-    @Select("SELECT id, parent_id, menu_name, menu_type, route_path, component_path, " +
-            "permission_code, icon, sort_no, visible, status, created_time, updated_time, deleted " +
-            "FROM sys_menu WHERE deleted = 0 ORDER BY sort_no")
+    @Select("SELECT id, parent_id, menu_name, menu_type, path AS route_path, component AS component_path, " +
+            "permission AS permission_code, icon, sort_order AS sort_no, visible, status, created_time, updated_time, deleted " +
+            "FROM sys_menu WHERE deleted = 0 ORDER BY sort_order")
     List<Menu> findAllMenus();
 
     /**
      * 根据用户ID查询菜单
      */
-    @Select("SELECT DISTINCT m.id, m.parent_id, m.menu_name, m.menu_type, m.route_path, m.component_path, " +
-            "m.permission_code, m.icon, m.sort_no, m.visible, m.status, m.created_time, m.updated_time, m.deleted " +
+    @Select("SELECT DISTINCT m.id, m.parent_id, m.menu_name, m.menu_type, m.path AS route_path, m.component AS component_path, " +
+            "m.permission AS permission_code, m.icon, m.sort_order AS sort_no, m.visible, m.status, m.created_time, m.updated_time, m.deleted " +
             "FROM sys_menu m " +
             "INNER JOIN sys_role_menu rm ON m.id = rm.menu_id " +
             "INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id " +
             "WHERE ur.user_id = #{userId} AND m.deleted = 0 AND m.status = 1 " +
-            "ORDER BY m.sort_no")
+            "ORDER BY m.sort_order")
     List<Menu> findMenusByUserId(@Param("userId") Long userId);
 
     /**

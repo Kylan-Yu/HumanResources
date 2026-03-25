@@ -5,9 +5,8 @@
     <!-- 分页查询用户 -->
     <select id="selectUserPage" resultType="com.hrms.auth.entity.User">
         SELECT 
-            id, username, real_name, mobile, email, avatar, status,
-            org_id, dept_id, position_id, industry_type,
-            last_login_time, remark, created_by, created_time, updated_by, updated_time
+            id, username, real_name, phone AS mobile, email, avatar, status,
+            industry_type, last_login_time, created_by, created_time, updated_by, updated_time
         FROM sys_user
         WHERE deleted = 0
         <if test="query.username != null and query.username != ''">
@@ -17,16 +16,16 @@
             AND real_name LIKE CONCAT('%', #{query.realName}, '%')
         </if>
         <if test="query.mobile != null and query.mobile != ''">
-            AND mobile LIKE CONCAT('%', #{query.mobile}, '%')
+            AND phone LIKE CONCAT('%', #{query.mobile}, '%')
         </if>
         <if test="query.status != null">
             AND status = #{query.status}
         </if>
         <if test="query.orgId != null">
-            AND org_id = #{query.orgId}
+            AND 1 = 1
         </if>
         <if test="query.deptId != null">
-            AND dept_id = #{query.deptId}
+            AND 1 = 1
         </if>
         <if test="query.industryType != null and query.industryType != ''">
             AND industry_type = #{query.industryType}

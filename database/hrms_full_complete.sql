@@ -43,6 +43,29 @@ CREATE TABLE `sys_user` (
   KEY `idx_sys_user_deleted` (`deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `sys_user_custom_field` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `field_key` varchar(64) NOT NULL,
+  `field_name` varchar(100) NOT NULL,
+  `field_type` varchar(20) NOT NULL DEFAULT 'TEXT',
+  `required_flag` tinyint DEFAULT 0,
+  `placeholder` varchar(200) DEFAULT NULL,
+  `options_json` json DEFAULT NULL,
+  `default_value` varchar(255) DEFAULT NULL,
+  `industry_type` varchar(20) DEFAULT NULL,
+  `sort_order` int DEFAULT 0,
+  `status` tinyint DEFAULT 1,
+  `created_by` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_by` bigint DEFAULT NULL,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sys_user_custom_field_key` (`field_key`),
+  KEY `idx_sys_user_custom_field_status` (`status`),
+  KEY `idx_sys_user_custom_field_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE `sys_role` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `role_code` varchar(50) NOT NULL,
@@ -700,7 +723,237 @@ CREATE TABLE `hr_training_enrollment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================================
--- 8. Contract
+-- 8. Attendance
+-- ============================================================================
+
+CREATE TABLE `hr_attendance_shift` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `shift_code` varchar(50) NOT NULL,
+  `shift_name` varchar(100) NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `work_days` varchar(30) DEFAULT '1,2,3,4,5',
+  `work_hours` decimal(5,2) DEFAULT 8.00,
+  `late_tolerance_minutes` int DEFAULT 5,
+  `early_tolerance_minutes` int DEFAULT 5,
+  `status` varchar(20) DEFAULT 'ACTIVE',
+  `industry_type` varchar(20) DEFAULT 'company',
+  `remark` varchar(500) DEFAULT NULL,
+  `sort_order` int DEFAULT 0,
+  `created_by` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_by` bigint DEFAULT NULL,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_attendance_shift_code` (`shift_code`),
+  KEY `idx_hr_attendance_shift_status` (`status`),
+  KEY `idx_hr_attendance_shift_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_attendance_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `record_no` varchar(50) NOT NULL,
+  `employee_id` bigint NOT NULL,
+  `attendance_date` date NOT NULL,
+  `shift_id` bigint DEFAULT NULL,
+  `check_in_time` datetime DEFAULT NULL,
+  `check_out_time` datetime DEFAULT NULL,
+  `attendance_status` varchar(30) DEFAULT 'NORMAL',
+  `late_minutes` int DEFAULT 0,
+  `early_leave_minutes` int DEFAULT 0,
+  `overtime_minutes` int DEFAULT 0,
+  `work_hours` decimal(6,2) DEFAULT 0.00,
+  `source_type` varchar(20) DEFAULT 'MANUAL',
+  `location` varchar(255) DEFAULT NULL,
+  `remark` varchar(500) DEFAULT NULL,
+  `created_by` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_by` bigint DEFAULT NULL,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_attendance_record_no` (`record_no`),
+  KEY `idx_hr_attendance_record_employee` (`employee_id`),
+  KEY `idx_hr_attendance_record_date` (`attendance_date`),
+  KEY `idx_hr_attendance_record_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_attendance_appeal` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `appeal_no` varchar(50) NOT NULL,
+  `record_id` bigint DEFAULT NULL,
+  `employee_id` bigint NOT NULL,
+  `appeal_type` varchar(20) DEFAULT 'BOTH',
+  `requested_check_in_time` datetime DEFAULT NULL,
+  `requested_check_out_time` datetime DEFAULT NULL,
+  `reason` varchar(500) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'PENDING',
+  `approver_id` bigint DEFAULT NULL,
+  `approve_time` datetime DEFAULT NULL,
+  `approve_remark` varchar(500) DEFAULT NULL,
+  `created_by` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_by` bigint DEFAULT NULL,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_attendance_appeal_no` (`appeal_no`),
+  KEY `idx_hr_attendance_appeal_employee` (`employee_id`),
+  KEY `idx_hr_attendance_appeal_status` (`status`),
+  KEY `idx_hr_attendance_appeal_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================================
+-- 9. Notice And Workflow
+-- ============================================================================
+
+CREATE TABLE `hr_notice` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `title` varchar(200) NOT NULL,
+  `content` text NOT NULL,
+  `category` varchar(30) DEFAULT 'COMPANY',
+  `top_flag` tinyint DEFAULT 0,
+  `status` varchar(20) DEFAULT 'DRAFT',
+  `publish_scope` varchar(20) DEFAULT 'ALL',
+  `target_dept_ids` varchar(500) DEFAULT NULL,
+  `attachment_json` json DEFAULT NULL,
+  `published_by` bigint DEFAULT NULL,
+  `published_time` datetime DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_notice_status` (`status`),
+  KEY `idx_hr_notice_category` (`category`),
+  KEY `idx_hr_notice_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_notice_read_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `notice_id` bigint NOT NULL,
+  `user_id` bigint NOT NULL,
+  `read_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_notice_read` (`notice_id`,`user_id`),
+  KEY `idx_hr_notice_read_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_leave_apply` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `apply_no` varchar(50) NOT NULL,
+  `user_id` bigint NOT NULL,
+  `employee_id` bigint DEFAULT NULL,
+  `leave_type` varchar(30) DEFAULT 'ANNUAL',
+  `start_time` datetime NOT NULL,
+  `end_time` datetime NOT NULL,
+  `leave_days` decimal(6,2) DEFAULT 1.00,
+  `reason` varchar(500) DEFAULT NULL,
+  `status` varchar(30) DEFAULT 'SUBMITTED',
+  `current_instance_id` bigint DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_leave_apply_no` (`apply_no`),
+  KEY `idx_hr_leave_apply_user` (`user_id`),
+  KEY `idx_hr_leave_apply_status` (`status`),
+  KEY `idx_hr_leave_apply_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_workflow_template` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `template_name` varchar(100) NOT NULL,
+  `business_type` varchar(30) NOT NULL,
+  `status` varchar(20) DEFAULT 'ENABLED',
+  `version_no` int DEFAULT 1,
+  `remark` varchar(500) DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_workflow_template_business` (`business_type`),
+  KEY `idx_hr_workflow_template_status` (`status`),
+  KEY `idx_hr_workflow_template_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_workflow_template_node` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `template_id` bigint NOT NULL,
+  `node_order` int NOT NULL,
+  `node_name` varchar(100) NOT NULL,
+  `approver_type` varchar(30) NOT NULL,
+  `approver_role_code` varchar(50) DEFAULT NULL,
+  `approver_user_id` bigint DEFAULT NULL,
+  `condition_expression` varchar(200) DEFAULT NULL,
+  `required_flag` tinyint DEFAULT 1,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_workflow_template_node_tid` (`template_id`),
+  KEY `idx_hr_workflow_template_node_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_workflow_instance` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `template_id` bigint NOT NULL,
+  `business_type` varchar(30) NOT NULL,
+  `business_id` bigint NOT NULL,
+  `initiator_id` bigint NOT NULL,
+  `status` varchar(30) DEFAULT 'IN_PROGRESS',
+  `current_node_order` int DEFAULT NULL,
+  `current_node_name` varchar(100) DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `finished_time` datetime DEFAULT NULL,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_workflow_instance_business` (`business_type`,`business_id`),
+  KEY `idx_hr_workflow_instance_status` (`status`),
+  KEY `idx_hr_workflow_instance_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_workflow_task` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `instance_id` bigint NOT NULL,
+  `node_order` int NOT NULL,
+  `node_name` varchar(100) NOT NULL,
+  `assignee_id` bigint NOT NULL,
+  `status` varchar(20) DEFAULT 'WAITING',
+  `result` varchar(20) DEFAULT NULL,
+  `comment` varchar(500) DEFAULT NULL,
+  `action_time` datetime DEFAULT NULL,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_workflow_task_instance` (`instance_id`),
+  KEY `idx_hr_workflow_task_assignee` (`assignee_id`),
+  KEY `idx_hr_workflow_task_status` (`status`),
+  KEY `idx_hr_workflow_task_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `hr_workflow_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `instance_id` bigint NOT NULL,
+  `task_id` bigint DEFAULT NULL,
+  `node_order` int DEFAULT NULL,
+  `node_name` varchar(100) DEFAULT NULL,
+  `approver_id` bigint NOT NULL,
+  `action` varchar(20) NOT NULL,
+  `result` varchar(20) DEFAULT NULL,
+  `comment` varchar(500) DEFAULT NULL,
+  `action_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_workflow_record_instance` (`instance_id`),
+  KEY `idx_hr_workflow_record_approver` (`approver_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================================
+-- 10. Contract
 -- ============================================================================
 
 CREATE TABLE `hr_contract` (
@@ -743,7 +996,7 @@ CREATE TABLE `hr_contract_record` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================================
--- 9. Compatibility Adjustments
+-- 10. Compatibility Adjustments
 -- ============================================================================
 
 ALTER TABLE `hr_employee` ADD COLUMN `org_id` bigint DEFAULT NULL;
@@ -797,37 +1050,99 @@ SELECT
 FROM `hr_dept`;
 
 -- ============================================================================
--- 10. Seed Data
+-- 11. Seed Data
 -- ============================================================================
 
-INSERT INTO `sys_user` (`id`, `username`, `password`, `real_name`, `email`, `phone`, `status`, `industry_type`, `deleted`)
+INSERT INTO `sys_user` (`id`, `username`, `password`, `real_name`, `email`, `phone`, `status`, `industry_type`, `ext_json`, `deleted`)
 VALUES
-  (1, 'admin', '$2a$10$e0MYzXyjpJS7Pd0RVvHwHeFXf8v8fQwMCKjRZ3eLaxhUJQ6Qcgf2W', '系统管理员', 'admin@hrms.com', '13800000000', 1, 'company', 0),
-  (2, 'hr_admin', '$2a$10$e0MYzXyjpJS7Pd0RVvHwHeFXf8v8fQwMCKjRZ3eLaxhUJQ6Qcgf2W', 'HR管理员', 'hr@hrms.com', '13800000001', 1, 'company', 0);
+  (1, 'admin', '$2a$10$Ed0R6ymdsSGYXw5X9fNXF.ncmAMeo5i897EGdELR0fTjSaFjhi.rC', '系统管理员', 'admin@hrms.com', '13800000000', 1, 'company', JSON_OBJECT('deptId', 1), 0),
+  (2, 'hr_admin', '$2a$10$Ed0R6ymdsSGYXw5X9fNXF.ncmAMeo5i897EGdELR0fTjSaFjhi.rC', 'HR管理员', 'hr@hrms.com', '13800000001', 1, 'company', JSON_OBJECT('deptId', 1), 0),
+  (3, 'dept_manager', '$2a$10$Ed0R6ymdsSGYXw5X9fNXF.ncmAMeo5i897EGdELR0fTjSaFjhi.rC', '部门主管', 'manager@hrms.com', '13800000002', 1, 'company', JSON_OBJECT('deptId', 2), 0),
+  (4, 'employee01', '$2a$10$Ed0R6ymdsSGYXw5X9fNXF.ncmAMeo5i897EGdELR0fTjSaFjhi.rC', '普通员工', 'employee@hrms.com', '13800000003', 1, 'company', JSON_OBJECT('deptId', 2, 'leaderUserId', 3), 0),
+  (5, 'finance01', '$2a$10$Ed0R6ymdsSGYXw5X9fNXF.ncmAMeo5i897EGdELR0fTjSaFjhi.rC', '财务专员', 'finance@hrms.com', '13800000004', 1, 'company', JSON_OBJECT('deptId', 4), 0);
+
+INSERT INTO `sys_user_custom_field` (`id`, `field_key`, `field_name`, `field_type`, `required_flag`, `placeholder`, `options_json`, `default_value`, `industry_type`, `sort_order`, `status`, `deleted`)
+VALUES
+  (1, 'professionalTitle', '职称', 'SELECT', 0, '请选择职称', JSON_ARRAY('主任医师', '副主任医师', '主治医师', '住院医师'), NULL, 'hospital', 1, 1, 0),
+  (2, 'hobby', '兴趣特长', 'TEXT', 0, '请输入兴趣特长', NULL, NULL, NULL, 2, 1, 0),
+  (3, 'emergencyContact', '紧急联系人', 'TEXT', 0, '请输入紧急联系人', NULL, NULL, NULL, 3, 1, 0);
 
 INSERT INTO `sys_role` (`id`, `role_code`, `role_name`, `description`, `status`, `sort_order`, `deleted`)
 VALUES
   (1, 'ADMIN', '管理员', '系统管理员', 1, 1, 0),
   (2, 'HR', 'HR专员', '人力资源岗位', 1, 2, 0),
-  (3, 'MANAGER', '部门经理', '部门负责人', 1, 3, 0);
+  (3, 'MANAGER', '部门经理', '部门负责人', 1, 3, 0),
+  (4, 'EMPLOYEE', '普通员工', '员工自助端用户', 1, 4, 0),
+  (5, 'FINANCE', '财务', '财务岗位', 1, 5, 0);
 
 INSERT INTO `sys_menu` (`id`, `parent_id`, `menu_name`, `menu_type`, `path`, `component`, `permission`, `icon`, `sort_order`, `visible`, `status`, `deleted`)
 VALUES
-  (1, 0, '系统管理', 1, '/system', NULL, NULL, 'SettingOutlined', 1, 1, 1, 0),
+  (1, 0, '首页', 2, '/dashboard', 'dashboard/Dashboard', 'dashboard:view', 'DashboardOutlined', 1, 1, 1, 0),
   (2, 0, '组织管理', 1, '/org', NULL, NULL, 'TeamOutlined', 2, 1, 1, 0),
-  (3, 0, '员工管理', 1, '/employee', NULL, NULL, 'UsergroupAddOutlined', 3, 1, 1, 0),
-  (4, 0, '招聘管理', 1, '/recruit', NULL, NULL, 'UserOutlined', 4, 1, 1, 0),
-  (5, 0, '薪酬管理', 1, '/payroll', NULL, NULL, 'PayCircleOutlined', 5, 1, 1, 0),
-  (6, 0, '绩效管理', 1, '/performance', NULL, NULL, 'TrophyOutlined', 6, 1, 1, 0),
-  (7, 0, '培训管理', 1, '/training', NULL, NULL, 'BookOutlined', 7, 1, 1, 0);
+  (3, 2, '组织架构', 2, '/org/tree', 'org/tree', 'org:view', 'ApartmentOutlined', 1, 1, 1, 0),
+  (4, 2, '部门管理', 2, '/org/dept', 'org/dept', 'org:dept:view', 'BarsOutlined', 2, 1, 1, 0),
+  (5, 2, '岗位管理', 2, '/org/position', 'org/position', 'org:position:view', 'SolutionOutlined', 3, 1, 1, 0),
+  (6, 2, '职级管理', 2, '/org/rank', 'org/rank', 'org:rank:view', 'ProfileOutlined', 4, 1, 1, 0),
+  (7, 0, '员工管理', 1, '/employee', NULL, NULL, 'UsergroupAddOutlined', 3, 1, 1, 0),
+  (8, 7, '员工档案', 2, '/employee/list', 'employee/list', 'employee:archive:view', 'UsergroupAddOutlined', 1, 1, 1, 0),
+  (9, 7, '员工异动', 2, '/employee/change', 'employee/change', 'employee:change:view', 'UsergroupAddOutlined', 2, 1, 1, 0),
+  (10, 0, '招聘管理', 1, '/recruit', NULL, NULL, 'UserOutlined', 4, 1, 1, 0),
+  (11, 10, '招聘需求', 2, '/recruit/requirement/list', 'recruit/requirement/list', 'recruit:view', 'ReadOutlined', 1, 1, 1, 0),
+  (12, 0, '薪酬管理', 1, '/payroll', NULL, NULL, 'PayCircleOutlined', 5, 1, 1, 0),
+  (13, 12, '薪资标准', 2, '/payroll/standard/list', 'payroll/standard/list', 'payroll:view', 'PayCircleOutlined', 1, 1, 1, 0),
+  (14, 0, '绩效管理', 2, '/performance', 'performance', 'performance:view', 'TrophyOutlined', 6, 1, 1, 0),
+  (15, 0, '培训管理', 2, '/training', 'training', 'training:view', 'BookOutlined', 7, 1, 1, 0),
+  (16, 0, '考勤管理', 2, '/attendance', 'attendance', 'attendance:view', 'CalendarOutlined', 8, 1, 1, 0),
+  (17, 0, '公告中心', 1, '/notice', NULL, NULL, 'NotificationOutlined', 9, 1, 1, 0),
+  (18, 17, '公告通知', 2, '/notice/list', 'notice/list', 'notice:view', 'NotificationOutlined', 1, 1, 1, 0),
+  (19, 17, '公告发布', 2, '/notice/manage', 'notice/manage', 'notice:manage', 'NotificationOutlined', 2, 1, 1, 0),
+  (20, 0, '审批中心', 1, '/workflow', NULL, NULL, 'AuditOutlined', 10, 1, 1, 0),
+  (21, 20, '待办审批', 2, '/workflow/todo', 'workflow/todo', 'workflow:task:approve', 'AuditOutlined', 1, 1, 1, 0),
+  (22, 20, '流程模板', 2, '/workflow/template', 'workflow/template', 'workflow:template:manage', 'AuditOutlined', 2, 1, 1, 0),
+  (23, 0, '员工自助', 1, '/ess', NULL, NULL, 'UserOutlined', 11, 1, 1, 0),
+  (24, 23, '我的信息', 2, '/ess/profile', 'ess/profile', 'ess:profile:view', 'UserOutlined', 1, 1, 1, 0),
+  (25, 23, '我的考勤', 2, '/ess/attendance', 'ess/attendance', 'attendance:self:view', 'CalendarOutlined', 2, 1, 1, 0),
+  (26, 23, '请假申请', 2, '/ess/leave/apply', 'ess/leave/apply', 'leave:apply', 'FormOutlined', 3, 1, 1, 0),
+  (27, 23, '补卡申请', 2, '/ess/patch/apply', 'ess/patch/apply', 'attendance:patch:apply', 'FormOutlined', 4, 1, 1, 0),
+  (28, 23, '加班申请', 2, '/ess/overtime/apply', 'ess/overtime/apply', 'attendance:overtime:apply', 'ClockCircleOutlined', 5, 1, 1, 0),
+  (29, 23, '我的申请', 2, '/ess/leave/my', 'ess/leave/my', 'leave:my', 'FormOutlined', 6, 1, 1, 0),
+  (30, 0, '系统管理', 1, '/system', NULL, NULL, 'SettingOutlined', 12, 1, 1, 0),
+  (31, 30, '用户管理', 2, '/system/user', 'system/user', 'system:user:manage', 'SettingOutlined', 1, 1, 1, 0),
+  (32, 30, '角色管理', 2, '/system/role', 'system/role', 'system:role:manage', 'SettingOutlined', 2, 1, 1, 0),
+  (33, 30, '菜单管理', 2, '/system/menu', 'system/menu', 'system:menu:manage', 'SettingOutlined', 3, 1, 1, 0),
+  (34, 30, '字典管理', 2, '/system/dict', 'system/dict', 'system:dict:manage', 'SettingOutlined', 4, 1, 1, 0),
+  (35, 0, '团队管理', 1, '/team', NULL, NULL, 'TeamOutlined', 13, 1, 1, 0),
+  (36, 35, '团队考勤', 2, '/attendance/team', 'attendance/team', 'attendance:team:view', 'CalendarOutlined', 1, 1, 1, 0),
+  (37, 35, '团队成员', 2, '/employee/team', 'employee/team', 'employee:team:view', 'UsergroupAddOutlined', 2, 1, 1, 0),
+  (38, 35, '部门公告', 2, '/notice/dept', 'notice/dept', 'notice:dept:view', 'NotificationOutlined', 3, 1, 1, 0),
+  (39, 0, '权限总开关', 3, NULL, NULL, '*:*:*', NULL, 99, 0, 1, 0),
+  (40, 0, '请假管理权限', 3, NULL, NULL, 'leave:manage', NULL, 100, 0, 1, 0);
 
 INSERT INTO `sys_user_role` (`id`, `user_id`, `role_id`) VALUES
   (1, 1, 1),
-  (2, 2, 2);
+  (2, 2, 2),
+  (3, 3, 3),
+  (4, 4, 4),
+  (5, 5, 5);
 
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`) VALUES
-  (1, 1, 1), (2, 1, 2), (3, 1, 3), (4, 1, 4), (5, 1, 5), (6, 1, 6), (7, 1, 7),
-  (8, 2, 2), (9, 2, 3), (10, 2, 4), (11, 2, 5), (12, 2, 6), (13, 2, 7);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, id FROM `sys_menu` WHERE deleted = 0;
+
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
+  (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6),
+  (2, 7), (2, 8), (2, 9), (2, 10), (2, 11), (2, 12), (2, 13), (2, 14), (2, 15), (2, 16),
+  (2, 17), (2, 18), (2, 19), (2, 20), (2, 21), (2, 22), (2, 23), (2, 24), (2, 25), (2, 26), (2, 27), (2, 28), (2, 29),
+  (2, 40);
+
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
+  (3, 1), (3, 16), (3, 17), (3, 18), (3, 20), (3, 21), (3, 23), (3, 24), (3, 25), (3, 26), (3, 27), (3, 28), (3, 29),
+  (3, 35), (3, 36), (3, 37), (3, 38);
+
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
+  (4, 1), (4, 16), (4, 17), (4, 18), (4, 23), (4, 24), (4, 25), (4, 26), (4, 27), (4, 28), (4, 29);
+
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
+  (5, 1), (5, 12), (5, 13), (5, 20), (5, 21), (5, 17), (5, 18);
 
 INSERT INTO `hr_org` (`id`, `org_code`, `org_name`, `org_type`, `parent_id`, `industry_type`, `status`, `sort_order`, `deleted`)
 VALUES
@@ -913,6 +1228,53 @@ VALUES
   (1, 1, 2, 'REGISTERED', NULL, NULL, 0),
   (2, 1, 3, 'REGISTERED', NULL, NULL, 0),
   (3, 2, 1, 'REGISTERED', NULL, NULL, 0);
+
+INSERT INTO `hr_attendance_shift` (`id`, `shift_code`, `shift_name`, `start_time`, `end_time`, `work_days`, `work_hours`, `late_tolerance_minutes`, `early_tolerance_minutes`, `status`, `industry_type`, `remark`, `sort_order`, `deleted`)
+VALUES
+  (1, 'SHIFT20260325001', '标准白班', '09:00:00', '18:00:00', '1,2,3,4,5', 8.00, 5, 5, 'ACTIVE', 'company', '默认工作日班次', 1, 0),
+  (2, 'SHIFT20260325002', '医院早班', '08:00:00', '16:00:00', '1,2,3,4,5,6', 8.00, 5, 5, 'ACTIVE', 'hospital', '医院轮班示例', 2, 0);
+
+INSERT INTO `hr_attendance_record` (`id`, `record_no`, `employee_id`, `attendance_date`, `shift_id`, `check_in_time`, `check_out_time`, `attendance_status`, `late_minutes`, `early_leave_minutes`, `overtime_minutes`, `work_hours`, `source_type`, `location`, `remark`, `deleted`)
+VALUES
+  (1, 'AT20260325001', 1, '2026-03-24', 1, '2026-03-24 09:03:00', '2026-03-24 18:20:00', 'LATE', 3, 0, 20, 9.28, 'MANUAL', '总部打卡点A', '项目加班', 0),
+  (2, 'AT20260325002', 2, '2026-03-24', 1, '2026-03-24 08:58:00', '2026-03-24 17:55:00', 'EARLY_LEAVE', 0, 5, 0, 8.95, 'MANUAL', '总部打卡点A', NULL, 0),
+  (3, 'AT20260325003', 3, '2026-03-24', 1, NULL, NULL, 'ABSENT', 0, 0, 0, 0.00, 'MANUAL', '总部打卡点A', '缺勤示例', 0);
+
+INSERT INTO `hr_attendance_appeal` (`id`, `appeal_no`, `record_id`, `employee_id`, `appeal_type`, `requested_check_in_time`, `requested_check_out_time`, `reason`, `status`, `approver_id`, `approve_time`, `approve_remark`, `deleted`)
+VALUES
+  (1, 'AP20260325001', 3, 3, 'BOTH', '2026-03-24 09:01:00', '2026-03-24 18:02:00', '外出面试接待，忘记打卡', 'PENDING', NULL, NULL, NULL, 0);
+
+INSERT INTO `hr_notice` (`id`, `title`, `content`, `category`, `top_flag`, `status`, `publish_scope`, `target_dept_ids`, `attachment_json`, `published_by`, `published_time`, `deleted`)
+VALUES
+  (1, '清明节放假安排', '全体员工请查看放假通知并提前安排工作交接。', 'HOLIDAY', 1, 'PUBLISHED', 'ALL', NULL, NULL, 1, '2026-03-20 09:00:00', 0),
+  (2, '招聘流程制度更新', '从 2026-04-01 起，招聘流程审批节点按新模板执行。', 'POLICY', 0, 'PUBLISHED', 'DEPT', '1,3', NULL, 2, '2026-03-22 10:00:00', 0);
+
+INSERT INTO `hr_notice_read_record` (`id`, `notice_id`, `user_id`, `read_time`)
+VALUES
+  (1, 1, 1, '2026-03-20 10:00:00'),
+  (2, 1, 2, '2026-03-20 11:00:00');
+
+INSERT INTO `hr_workflow_template` (`id`, `template_name`, `business_type`, `status`, `version_no`, `remark`, `deleted`)
+VALUES
+  (1, '请假审批流程V1', 'LEAVE', 'ENABLED', 1, '默认请假流程模板', 0);
+
+INSERT INTO `hr_workflow_template_node` (`id`, `template_id`, `node_order`, `node_name`, `approver_type`, `approver_role_code`, `approver_user_id`, `condition_expression`, `required_flag`, `deleted`)
+VALUES
+  (1, 1, 1, '直属主管审批', 'DIRECT_LEADER', NULL, NULL, NULL, 1, 0),
+  (2, 1, 2, 'HR审批', 'SPECIFIED_ROLE', 'HR', NULL, 'days > 3', 1, 0);
+
+INSERT INTO `hr_leave_apply` (`id`, `apply_no`, `user_id`, `employee_id`, `leave_type`, `start_time`, `end_time`, `leave_days`, `reason`, `status`, `current_instance_id`, `deleted`)
+VALUES
+  (1, 'LV20260325001', 4, 2, 'ANNUAL', '2026-03-26 09:00:00', '2026-03-27 18:00:00', 2.00, '家庭事务请假', 'IN_APPROVAL', 1, 0);
+
+INSERT INTO `hr_workflow_instance` (`id`, `template_id`, `business_type`, `business_id`, `initiator_id`, `status`, `current_node_order`, `current_node_name`, `deleted`)
+VALUES
+  (1, 1, 'LEAVE', 1, 4, 'IN_PROGRESS', 1, '直属主管审批', 0);
+
+INSERT INTO `hr_workflow_task` (`id`, `instance_id`, `node_order`, `node_name`, `assignee_id`, `status`, `deleted`)
+VALUES
+  (1, 1, 1, '直属主管审批', 3, 'PENDING', 0),
+  (2, 1, 2, 'HR审批', 2, 'WAITING', 0);
 
 INSERT INTO `hr_contract` (`id`, `employee_id`, `contract_no`, `contract_type`, `contract_subject`, `start_date`, `end_date`, `sign_date`, `contract_status`, `renew_count`, `industry_type`, `remark`, `deleted`)
 VALUES

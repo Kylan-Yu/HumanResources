@@ -2,21 +2,21 @@ package com.hrms.system.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.hrms.common.Result;
 import com.hrms.common.PageResult;
+import com.hrms.common.Result;
 import com.hrms.system.entity.User;
 import com.hrms.system.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
+import java.util.Map;
 
 /**
- * 用户控制器
- *
- * @author HRMS
+ * User APIs.
  */
 @Tag(name = "用户管理", description = "用户管理相关接口")
 @RestController
@@ -40,7 +40,7 @@ public class UserController {
         return Result.success(PageResult.of(userPage));
     }
 
-    @Operation(summary = "获取用户详情", description = "根据ID获取用户详细信息")
+    @Operation(summary = "获取用户详情", description = "根据ID获取用户详情信息")
     @GetMapping("/{id}")
     public Result<User> getUserDetail(@PathVariable Long id) {
         User user = userService.getById(id);
@@ -71,20 +71,44 @@ public class UserController {
 
     @Operation(summary = "更新用户状态", description = "更新用户状态")
     @PutMapping("/{id}/status")
-    public Result<Boolean> updateUserStatus(@PathVariable Long id, @RequestParam Integer status) {
+    public Result<Boolean> updateUserStatus(
+            @PathVariable Long id,
+            @RequestParam(required = false) Integer status,
+            @RequestBody(required = false) Map<String, Object> body
+    ) {
+        Integer finalStatus = status;
+        if (finalStatus == null && body != null && body.get("status") != null) {
+            finalStatus = Integer.valueOf(String.valueOf(body.get("status")));
+        }
+        if (finalStatus == null) {
+            return Result.error("状态不能为空");
+        }
+
         User user = new User();
         user.setId(id);
-        user.setStatus(status);
+        user.setStatus(finalStatus);
         userService.updateById(user);
         return Result.success(true);
     }
 
     @Operation(summary = "重置密码", description = "重置用户密码")
     @PutMapping("/{id}/password")
-    public Result<Boolean> resetPassword(@PathVariable Long id, @RequestParam String newPassword) {
+    public Result<Boolean> resetPassword(
+            @PathVariable Long id,
+            @RequestParam(required = false) String newPassword,
+            @RequestBody(required = false) Map<String, Object> body
+    ) {
+        String finalPassword = newPassword;
+        if (!StringUtils.hasText(finalPassword) && body != null && body.get("newPassword") != null) {
+            finalPassword = String.valueOf(body.get("newPassword"));
+        }
+        if (!StringUtils.hasText(finalPassword)) {
+            return Result.error("新密码不能为空");
+        }
+
         User user = new User();
         user.setId(id);
-        user.setPassword(newPassword); // 实际应该加密
+        user.setPassword(finalPassword); // 实际建议加密
         userService.updateById(user);
         return Result.success(true);
     }

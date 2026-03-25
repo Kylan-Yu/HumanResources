@@ -30,7 +30,11 @@ public class AuthController {
     @Operation(summary = "用户登录", description = "用户账号密码登录")
     @PostMapping("/login")
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        System.out.println(">>> AuthController.login reached");
+        System.out.println("请求用户名: " + request.getUsername());
+        System.out.println("请求时间: " + new java.util.Date());
         LoginResponse response = authService.login(request);
+        System.out.println("登录处理完成，返回结果: " + (response != null ? "成功" : "失败"));
         return Result.success(response);
     }
 

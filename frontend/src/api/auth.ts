@@ -1,4 +1,4 @@
-import { post, get } from '@/utils/request'
+﻿import { get, post } from '@/utils/request'
 
 export interface LoginRequest {
   username: string
@@ -11,45 +11,20 @@ export interface LoginResponse {
   refreshToken: string
   tokenType: string
   expiresIn: number
-  user: {
-    id: number
-    username: string
-    realName: string
-    email: string
-    phone: string
-    avatar?: string
-    roles: string[]
-    permissions: string[]
-  }
-}
-
-export interface UserInfo {
-  id: number
+  userId: number
   username: string
   realName: string
-  email: string
-  phone: string
+  email?: string
+  mobile?: string
   avatar?: string
   roles: string[]
   permissions: string[]
 }
 
-// 登录
-export const login = (data: LoginRequest) => {
-  return post<LoginResponse>('/auth/login', data)
-}
+export const login = (data: LoginRequest) => post<LoginResponse>('/auth/login', data)
 
-// 登出
-export const logout = () => {
-  return post('/auth/logout')
-}
+export const logout = () => post('/auth/logout')
 
-// 获取用户信息
-export const getUserInfo = () => {
-  return get<UserInfo>('/auth/user-info')
-}
+export const getUserInfo = () => get<LoginResponse>('/auth/user-info')
 
-// 刷新Token
-export const refreshToken = () => {
-  return post<LoginResponse>('/auth/refresh')
-}
+export const refreshToken = () => post<LoginResponse>('/auth/refresh')

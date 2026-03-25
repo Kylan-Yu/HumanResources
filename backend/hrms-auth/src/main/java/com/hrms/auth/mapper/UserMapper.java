@@ -22,8 +22,8 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 根据用户名查询用户
      */
-    @Select("SELECT id, username, password, real_name, mobile, email, avatar, status, " +
-            "org_id, dept_id, position_id, industry_type, last_login_time, remark, " +
+    @Select("SELECT id, username, password, real_name, phone AS mobile, email, avatar, status, " +
+            "industry_type, last_login_time, " +
             "created_by, created_time, updated_by, updated_time, deleted " +
             "FROM sys_user WHERE username = #{username} AND deleted = 0")
     User findByUsername(@Param("username") String username);
@@ -31,11 +31,11 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 根据用户ID查询权限
      */
-    @Select("SELECT DISTINCT m.permission_code " +
+    @Select("SELECT DISTINCT m.permission " +
             "FROM sys_menu m " +
             "INNER JOIN sys_role_menu rm ON m.id = rm.menu_id " +
             "INNER JOIN sys_user_role ur ON rm.role_id = ur.role_id " +
-            "WHERE ur.user_id = #{userId} AND m.deleted = 0 AND m.status = 1")
+            "WHERE ur.user_id = #{userId} AND m.deleted = 0 AND m.status = 1 AND m.permission IS NOT NULL AND m.permission <> ''")
     List<String> findPermissionsByUserId(@Param("userId") Long userId);
 
     /**
@@ -61,7 +61,7 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 检查手机号是否存在
      */
-    @Select("SELECT COUNT(1) FROM sys_user WHERE mobile = #{mobile} AND deleted = 0 AND id != #{excludeId}")
+    @Select("SELECT COUNT(1) FROM sys_user WHERE phone = #{mobile} AND deleted = 0 AND id != #{excludeId}")
     int checkMobileExists(@Param("mobile") String mobile, @Param("excludeId") Long excludeId);
 
     /**

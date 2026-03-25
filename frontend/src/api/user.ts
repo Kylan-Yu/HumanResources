@@ -50,3 +50,19 @@ export const updateUserStatus = (id: number, status: number) => {
 export const resetUserPassword = (id: number, newPassword: string) => {
   return put<boolean>(`/users/${id}/password`, { newPassword })
 }
+
+export const getUserCustomFields = (params?: { industryType?: string; status?: number }) => {
+  return get<any[]>('/users/custom-fields', params)
+}
+
+export const createUserCustomField = (data: any) => {
+  return post<number>('/users/custom-fields', data)
+}
+
+export const updateUserCustomField = (id: number, data: any) => {
+  return put<boolean>(`/users/custom-fields/${id}`, data)
+}
+
+export const deleteUserCustomField = (id: number) => {
+  return del<boolean>(`/users/custom-fields/${id}`)
+}

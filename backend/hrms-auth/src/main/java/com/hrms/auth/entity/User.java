@@ -40,7 +40,7 @@ public class User {
     /**
      * 手机号
      */
-    @TableField("mobile")
+    @TableField("phone")
     private String mobile;
 
     /**
@@ -64,19 +64,19 @@ public class User {
     /**
      * 所属组织ID
      */
-    @TableField("org_id")
+    @TableField(exist = false)
     private Long orgId;
 
     /**
      * 所属部门ID
      */
-    @TableField("dept_id")
+    @TableField(exist = false)
     private Long deptId;
 
     /**
      * 岗位ID
      */
-    @TableField("position_id")
+    @TableField(exist = false)
     private Long positionId;
 
     /**
@@ -94,7 +94,7 @@ public class User {
     /**
      * 备注
      */
-    @TableField("remark")
+    @TableField(exist = false)
     private String remark;
 
     /**

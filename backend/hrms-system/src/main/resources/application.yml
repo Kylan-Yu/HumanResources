@@ -79,3 +79,6 @@ management:
     web:
       exposure:
         include: health,info
+
+jwt:
+  secret: hrms-jwt-secret-key-2024-hrms-system-secure-key-for-hs512-algorithm-requirement-abcdefg1234567890

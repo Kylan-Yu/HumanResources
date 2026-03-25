@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios'
+﻿import axios, { AxiosInstance } from 'axios'
 import { message } from 'antd'
 
 export interface ApiResponse<T = any> {
@@ -40,6 +40,8 @@ request.interceptors.request.use(
   (error: any) => {
     const status = error?.response?.status
     if (status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
       message.error('未登录或登录已过期')
       window.location.href = '/login'
     } else if (status === 403) {

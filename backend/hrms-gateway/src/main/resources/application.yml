@@ -6,17 +6,13 @@ spring:
     name: hrms-gateway
   profiles:
     active: dev
+  main:
+    web-application-type: reactive
   cloud:
     nacos:
-      discovery:
-        server-addr: 192.168.15.100:8848
-        namespace: hrms
-        group: DEFAULT_GROUP
       config:
-        server-addr: 192.168.15.100:8848
-        namespace: hrms
-        group: DEFAULT_GROUP
-        file-extension: yml
+        import-check:
+          enabled: false
     gateway:
       globalcors:
         cors-configurations:
@@ -27,19 +23,14 @@ spring:
             allowCredentials: true
       routes:
         - id: hrms-auth
-          uri: lb://hrms-auth
+          uri: http://localhost:8081
           predicates:
             - Path=/auth/**
 
         - id: hrms-system-api
-          uri: lb://hrms-system
+          uri: http://localhost:8082
           predicates:
-            - Path=/users/**,/roles/**,/menus/**,/dicts/**,/org/**,/dept/**,/position/**,/rank/**,/employees/**,/employee-changes/**,/recruit-requirements/**,/payroll-standards/**,/performance/**,/training/**,/contracts/**
-
-        - id: hrms-system-misc
-          uri: lb://hrms-system
-          predicates:
-            - Path=/test/**,/db-test/**,/test-org/**
+            - Path=/users/**,/roles/**,/menus/**,/dicts/**,/org/**,/dept/**,/position/**,/rank/**,/employees/**,/employee-changes/**,/recruit-requirements/**,/payroll-standards/**,/performance/**,/training/**,/attendance/**,/contracts/**,/notices/**,/workflow/**,/leave-applications/**
 
   redis:
     host: 192.168.15.100

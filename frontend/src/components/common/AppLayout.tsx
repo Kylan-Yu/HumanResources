@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Avatar, Button, Dropdown, Layout, Menu, Space } from 'antd'
+﻿import React, { useMemo, useState } from 'react'
+import { Avatar, Button, Dropdown, Layout, Menu, Result, Space } from 'antd'
 import {
   BookOutlined,
   CalendarOutlined,
@@ -8,14 +8,25 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  NotificationOutlined,
   PayCircleOutlined,
   SettingOutlined,
   TeamOutlined,
   TrophyOutlined,
   UserOutlined,
-  UsergroupAddOutlined
+  UsergroupAddOutlined,
+  AuditOutlined,
+  ApartmentOutlined,
+  BarsOutlined,
+  ReadOutlined,
+  SolutionOutlined,
+  ProfileOutlined,
+  FormOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/store/auth'
+import type { MenuItem } from '@/api/menu'
 
 const { Header, Sider, Content } = Layout
 
@@ -23,89 +34,129 @@ interface AppLayoutProps {
   children: React.ReactNode
 }
 
+const iconMap: Record<string, React.ReactNode> = {
+  DashboardOutlined: <DashboardOutlined />,
+  SettingOutlined: <SettingOutlined />,
+  TeamOutlined: <TeamOutlined />,
+  UsergroupAddOutlined: <UsergroupAddOutlined />,
+  UserOutlined: <UserOutlined />,
+  CalendarOutlined: <CalendarOutlined />,
+  PayCircleOutlined: <PayCircleOutlined />,
+  TrophyOutlined: <TrophyOutlined />,
+  FileTextOutlined: <FileTextOutlined />,
+  BookOutlined: <BookOutlined />,
+  NotificationOutlined: <NotificationOutlined />,
+  AuditOutlined: <AuditOutlined />,
+  ApartmentOutlined: <ApartmentOutlined />,
+  BarsOutlined: <BarsOutlined />,
+  ReadOutlined: <ReadOutlined />,
+  SolutionOutlined: <SolutionOutlined />,
+  ProfileOutlined: <ProfileOutlined />,
+  FormOutlined: <FormOutlined />,
+  ClockCircleOutlined: <ClockCircleOutlined />
+}
+
+const fallbackMenus: MenuItem[] = [
+  { id: 1, menuName: '工作台', menuType: 2, path: '/dashboard', icon: 'DashboardOutlined', children: [] },
+  {
+    id: 2,
+    menuName: '系统管理',
+    menuType: 1,
+    path: '/system',
+    icon: 'SettingOutlined',
+    children: [
+      { id: 21, menuName: '用户管理', menuType: 2, path: '/system/user', children: [] },
+      { id: 22, menuName: '角色管理', menuType: 2, path: '/system/role', children: [] },
+      { id: 23, menuName: '菜单管理', menuType: 2, path: '/system/menu', children: [] },
+      { id: 24, menuName: '字典管理', menuType: 2, path: '/system/dict', children: [] }
+    ]
+  },
+  {
+    id: 3,
+    menuName: '组织管理',
+    menuType: 1,
+    path: '/org',
+    icon: 'TeamOutlined',
+    children: [
+      { id: 31, menuName: '组织架构', menuType: 2, path: '/org/tree', children: [] },
+      { id: 32, menuName: '部门管理', menuType: 2, path: '/org/dept', children: [] },
+      { id: 33, menuName: '岗位管理', menuType: 2, path: '/org/position', children: [] },
+      { id: 34, menuName: '职级管理', menuType: 2, path: '/org/rank', children: [] }
+    ]
+  },
+  { id: 4, menuName: '考勤管理', menuType: 2, path: '/attendance', icon: 'CalendarOutlined', children: [] }
+]
+
+const flattenAllowedPaths = (menus: MenuItem[]): string[] => {
+  const paths: string[] = []
+  const walk = (nodes: MenuItem[]) => {
+    nodes.forEach((node) => {
+      if (node.menuType !== 3 && node.path) {
+        paths.push(node.path)
+      }
+      if (node.children?.length) {
+        walk(node.children)
+      }
+    })
+  }
+  walk(menus)
+  return Array.from(new Set(paths))
+}
+
+const toAntMenuItems = (menus: MenuItem[]): any[] => {
+  return menus
+    .filter((item) => item.visible !== 0 && item.status !== 0 && item.menuType !== 3)
+    .map((item) => {
+      const children = item.children?.length ? toAntMenuItems(item.children) : undefined
+      return {
+        key: item.path || `menu-${item.id}`,
+        icon: item.icon ? iconMap[item.icon] : undefined,
+        label: item.menuName,
+        children
+      }
+    })
+}
+
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
-  const menuItems = [
-    { key: '/dashboard', icon: <DashboardOutlined />, label: '工作台' },
-    {
-      key: '/system',
-      icon: <SettingOutlined />,
-      label: '系统管理',
-      children: [
-        { key: '/system/user', label: '用户管理' },
-        { key: '/system/role', label: '角色管理' },
-        { key: '/system/menu', label: '菜单管理' },
-        { key: '/system/dict', label: '字典管理' },
-        { key: '/system/test', label: '接口测试' }
-      ]
-    },
-    {
-      key: '/org',
-      icon: <TeamOutlined />,
-      label: '组织管理',
-      children: [
-        { key: '/org/tree', label: '组织架构' },
-        { key: '/org/dept', label: '部门管理' },
-        { key: '/org/position', label: '岗位管理' },
-        { key: '/org/rank', label: '职级管理' }
-      ]
-    },
-    {
-      key: '/employee',
-      icon: <UsergroupAddOutlined />,
-      label: '员工管理',
-      children: [
-        { key: '/employee/list', label: '员工档案' },
-        { key: '/employee/change', label: '员工异动' }
-      ]
-    },
-    {
-      key: '/recruit',
-      icon: <UserOutlined />,
-      label: '招聘管理',
-      children: [{ key: '/recruit/requirement/list', label: '招聘需求' }]
-    },
-    {
-      key: '/attendance',
-      icon: <CalendarOutlined />,
-      label: '考勤管理'
-    },
-    {
-      key: '/payroll',
-      icon: <PayCircleOutlined />,
-      label: '薪酬管理',
-      children: [{ key: '/payroll/standard/list', label: '薪资标准' }]
-    },
-    {
-      key: '/performance',
-      icon: <TrophyOutlined />,
-      label: '绩效管理',
-      children: [{ key: '/performance', label: '绩效管理' }]
-    },
-    {
-      key: '/contract',
-      icon: <FileTextOutlined />,
-      label: '合同管理',
-      children: [
-        { key: '/contract/list', label: '合同列表' },
-        { key: '/contract/expire-warning', label: '到期预警' }
-      ]
-    },
-    {
-      key: '/training',
-      icon: <BookOutlined />,
-      label: '培训管理',
-      children: [{ key: '/training', label: '培训管理' }]
-    }
-  ]
+  const user = useAuthStore((state) => state.user)
+  const menuTree = useAuthStore((state) => state.menuTree)
+  const logout = useAuthStore((state) => state.logout)
 
-  const userMenuItems = [
-    { key: 'profile', icon: <UserOutlined />, label: '个人信息' },
-    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }
-  ]
+  const effectiveMenus = menuTree.length > 0 ? menuTree : fallbackMenus
+
+  const menuItems = useMemo(() => toAntMenuItems(effectiveMenus), [effectiveMenus])
+  const allowedPaths = useMemo(() => flattenAllowedPaths(effectiveMenus), [effectiveMenus])
+
+  const hasRoutePermission = useMemo(() => {
+    const path = location.pathname
+    if (path === '/' || path === '/dashboard') {
+      return true
+    }
+
+    if (menuTree.length === 0) {
+      return true
+    }
+
+    if (allowedPaths.includes(path)) {
+      return true
+    }
+
+    const root = '/' + (path.split('/')[1] || '')
+    if (root !== '/' && allowedPaths.some((menuPath) => menuPath.startsWith(`${root}/`))) {
+      return true
+    }
+
+    return allowedPaths.some((menuPath) => {
+      if (!menuPath || menuPath === '/') {
+        return false
+      }
+      return path.startsWith(`${menuPath}/`)
+    })
+  }, [location.pathname, allowedPaths, menuTree.length])
 
   const getSelectedKeys = () => [location.pathname]
 
@@ -137,7 +188,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           selectedKeys={getSelectedKeys()}
           defaultOpenKeys={getOpenKeys()}
           items={menuItems as any}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => {
+            if (String(key).startsWith('/')) {
+              navigate(String(key))
+            }
+          }}
         />
       </Sider>
       <Layout>
@@ -158,9 +213,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           />
           <Dropdown
             menu={{
-              items: userMenuItems,
-              onClick: ({ key }) => {
+              items: [
+                { key: 'profile', icon: <UserOutlined />, label: '个人信息' },
+                { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }
+              ],
+              onClick: async ({ key }) => {
                 if (key === 'logout') {
+                  await logout()
                   navigate('/login')
                 }
               }
@@ -168,7 +227,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           >
             <Space style={{ cursor: 'pointer' }}>
               <Avatar size="small" icon={<UserOutlined />} />
-              <span>管理员</span>
+              <span>{user?.realName || user?.username || '用户'}</span>
             </Space>
           </Dropdown>
         </Header>
@@ -181,7 +240,16 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             minHeight: 280
           }}
         >
-          {children}
+          {hasRoutePermission ? (
+            children
+          ) : (
+            <Result
+              status="403"
+              title="无权限访问"
+              subTitle="当前账号无此页面权限，请联系管理员配置菜单权限。"
+              extra={<Button onClick={() => navigate('/dashboard')}>返回首页</Button>}
+            />
+          )}
         </Content>
       </Layout>
     </Layout>
@@ -189,4 +257,3 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 }
 
 export default AppLayout
-

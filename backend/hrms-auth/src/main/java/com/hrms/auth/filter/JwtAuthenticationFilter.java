@@ -37,6 +37,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
+        // 打印请求信息
+        System.out.println("=== JWT Filter Debug ===");
+        System.out.println("requestURI = " + request.getRequestURI());
+        System.out.println("servletPath = " + request.getServletPath());
+        System.out.println("contextPath = " + request.getContextPath());
+        System.out.println("method = " + request.getMethod());
+
+        // 获取请求路径
+        String requestURI = request.getRequestURI();
+        String servletPath = request.getServletPath();
+        
+        System.out.println("即将判断 - requestURI: " + requestURI);
+        System.out.println("即将判断 - servletPath: " + servletPath);
+        
+        // 登录接口直接放行，不需要JWT验证
+        boolean isLoginPath = (requestURI != null && (requestURI.equals("/auth/login") || requestURI.contains("/auth/login"))) ||
+                             (servletPath != null && (servletPath.equals("/auth/login") || servletPath.contains("/auth/login")));
+        
+        System.out.println("isLoginPath = " + isLoginPath);
+        
+        if (isLoginPath) {
+            System.out.println(">>> JWT filter bypass login");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        System.out.println(">>> JWT filter continues validation");
+
         try {
             // 从请求头中获取JWT令牌
             String jwt = getJwtFromRequest(request);
