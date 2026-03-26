@@ -23,9 +23,15 @@ export const updateWorkflowTemplate = (id: number, data: any) => put<boolean>(`/
 
 export const deleteWorkflowTemplate = (id: number) => del<boolean>(`/workflow/templates/${id}`)
 
-export const getWorkflowTemplateNodes = (id: number) => get<any[]>(`/workflow/templates/${id}/nodes`)
+export const getWorkflowTemplateNodes = (id: number) => {
+  console.log('🔍 [前端] 请求工作流模板节点:', { id, url: `/workflow/templates/${id}/nodes` })
+  return get<any[]>(`/workflow/templates/${id}/nodes`)
+}
 
-export const saveWorkflowTemplateNodes = (id: number, data: any[]) => post<boolean>(`/workflow/templates/${id}/nodes`, data)
+export const saveWorkflowTemplateNodes = (id: number, data: any[]) => {
+  console.log('🔍 [前端] 保存工作流模板节点:', { id, dataLength: data?.length || 0 })
+  return post<boolean>(`/workflow/templates/${id}/nodes`, data)
+}
 
 export const getWorkflowRoleList = () => get<any[]>('/roles/list')
 

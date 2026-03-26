@@ -6,15 +6,13 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 分页结果
- *
- * @author HRMS
+ * 分页结果。
  */
 @Data
 public class PageResult<T> {
 
     /**
-     * Primary pagination fields used by current frontend.
+     * 当前前端使用字段。
      */
     private List<T> list;
     private Long total;
@@ -23,7 +21,7 @@ public class PageResult<T> {
     private Integer pages;
 
     /**
-     * Compatibility fields for old frontend pages.
+     * 兼容旧前端字段。
      */
     private List<T> records;
     private Integer current;

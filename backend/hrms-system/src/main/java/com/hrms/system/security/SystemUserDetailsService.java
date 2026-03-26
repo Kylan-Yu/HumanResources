@@ -33,10 +33,13 @@ public class SystemUserDetailsService implements UserDetailsService {
         }
 
         List<String> permissions = userMapper.findPermissionsByUserId(user.getId());
+        System.out.println("[workflow-auth-fix] parsed userId: " + user.getId());
+        System.out.println("[workflow-auth-fix] raw permissions: " + permissions);
         List<SimpleGrantedAuthority> authorities = permissions.stream()
                 .filter(StringUtils::hasText)
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
+        System.out.println("[workflow-auth-fix] granted authorities: " + authorities);
 
         return new LoginUser(
                 user.getId(),

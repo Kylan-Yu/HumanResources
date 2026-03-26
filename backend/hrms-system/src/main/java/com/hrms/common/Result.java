@@ -3,9 +3,7 @@ package com.hrms.common;
 import lombok.Data;
 
 /**
- * 统一响应结果
- *
- * @author HRMS
+ * 统一响应结果。
  */
 @Data
 public class Result<T> {

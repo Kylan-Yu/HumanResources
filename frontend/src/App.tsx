@@ -45,6 +45,10 @@ import NoticeListPage from './pages/notice/list'
 import NoticeManagePage from './pages/notice/manage'
 import WorkflowTodoPage from './pages/workflow/todo'
 import WorkflowTemplatePage from './pages/workflow/template'
+import WorkflowTemplateListPage from './pages/workflow/templates'
+import WorkflowTemplateCreatePage from './pages/workflow/templates/new'
+import WorkflowTemplateHistoryPage from './pages/workflow/templates/history'
+import WorkflowDesignerPage from './pages/workflow/designer'
 import LeaveApplyPage from './pages/ess/leave/apply'
 import LeaveMyPage from './pages/ess/leave/my'
 import ProfilePage from './pages/ess/profile'
@@ -133,6 +137,10 @@ const App: React.FC = () => {
 
                 <Route path="/workflow/todo" element={<WorkflowTodoPage />} />
                 <Route path="/workflow/template" element={<WorkflowTemplatePage />} />
+                <Route path="/workflow/templates" element={<WorkflowTemplateListPage />} />
+                <Route path="/workflow/templates/new" element={<WorkflowTemplateCreatePage />} />
+                <Route path="/workflow/templates/:id/design" element={<WorkflowDesignerPage />} />
+                <Route path="/workflow/templates/:id/history" element={<WorkflowTemplateHistoryPage />} />
 
                 <Route path="/ess/profile" element={<ProfilePage />} />
                 <Route path="/ess/attendance" element={<AttendanceSelfPage />} />

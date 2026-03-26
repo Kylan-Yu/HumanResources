@@ -19,29 +19,30 @@ USE `hrms_db`;
 -- 1. System
 -- ============================================================================
 
+-- 用户表
 CREATE TABLE `sys_user` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) NOT NULL,
-  `password` varchar(100) NOT NULL,
-  `real_name` varchar(50) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `avatar` varchar(255) DEFAULT NULL,
-  `status` tinyint DEFAULT 1,
-  `last_login_time` datetime DEFAULT NULL,
-  `last_login_ip` varchar(50) DEFAULT NULL,
-  `industry_type` varchar(20) DEFAULT 'company',
-  `ext_json` json DEFAULT NULL,
-  `created_by` bigint DEFAULT NULL,
-  `created_time` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_by` bigint DEFAULT NULL,
-  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `deleted` tinyint DEFAULT 0,
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `username` varchar(50) NOT NULL COMMENT '用户名',
+  `password` varchar(100) NOT NULL COMMENT '密码',
+  `real_name` varchar(50) DEFAULT NULL COMMENT '真实姓名',
+  `email` varchar(100) DEFAULT NULL COMMENT '邮箱',
+  `phone` varchar(20) DEFAULT NULL COMMENT '手机号',
+  `avatar` varchar(255) DEFAULT NULL COMMENT '头像URL',
+  `status` tinyint DEFAULT 1 COMMENT '状态(1-启用,0-禁用)',
+  `last_login_time` datetime DEFAULT NULL COMMENT '最后登录时间',
+  `last_login_ip` varchar(50) DEFAULT NULL COMMENT '最后登录IP',
+  `industry_type` varchar(20) DEFAULT 'company' COMMENT '行业类型',
+  `ext_json` json DEFAULT NULL COMMENT '扩展字段JSON',
+  `created_by` bigint DEFAULT NULL COMMENT '创建人ID',
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_by` bigint DEFAULT NULL COMMENT '更新人ID',
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` tinyint DEFAULT 0 COMMENT '删除标记',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_sys_user_username` (`username`),
   KEY `idx_sys_user_status` (`status`),
   KEY `idx_sys_user_deleted` (`deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 CREATE TABLE `sys_user_custom_field` (
   `id` bigint NOT NULL AUTO_INCREMENT,
@@ -1204,7 +1205,8 @@ INSERT INTO `sys_user_role` (`id`, `user_id`, `role_id`) VALUES
   (2, 2, 2),
   (3, 3, 3),
   (4, 4, 4),
-  (5, 5, 5);
+  (5, 5, 5),
+  (6, 1, 2);
 
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
 SELECT 1, id FROM `sys_menu` WHERE deleted = 0;
@@ -1380,5 +1382,156 @@ INSERT INTO `hr_contract_record` (`id`, `contract_id`, `record_type`, `old_value
 VALUES
   (1, 1, 'RENEW', '2026-12-31', '2027-12-31', '续签一年', 1),
   (2, 3, 'STATUS', 'ACTIVE', 'TERMINATED', '员工离职', 1);
+
+-- ============================================================================
+-- 8. Employee Self-Service & Team Management (Phase 1)
+-- ============================================================================
+
+-- 补卡申请表
+CREATE TABLE IF NOT EXISTS `hr_patch_apply` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `apply_no` varchar(50) NOT NULL COMMENT '申请单号',
+  `user_id` bigint NOT NULL COMMENT '申请人用户ID',
+  `employee_id` bigint DEFAULT NULL COMMENT '申请人员工ID',
+  `attendance_date` date NOT NULL COMMENT '考勤日期',
+  `patch_time` datetime NOT NULL COMMENT '补卡时间',
+  `patch_type` varchar(20) NOT NULL COMMENT '补卡类型(CHECK_IN-上班补卡,CHECK_OUT-下班补卡)',
+  `reason` varchar(500) DEFAULT NULL COMMENT '补卡原因',
+  `status` varchar(30) DEFAULT 'SUBMITTED' COMMENT '申请状态',
+  `current_instance_id` bigint DEFAULT NULL COMMENT '当前工作流实例ID',
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` tinyint DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_patch_apply_no` (`apply_no`),
+  KEY `idx_hr_patch_apply_user` (`user_id`),
+  KEY `idx_hr_patch_apply_date` (`attendance_date`),
+  KEY `idx_hr_patch_apply_status` (`status`),
+  KEY `idx_hr_patch_apply_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='补卡申请表';
+
+-- 加班申请表
+CREATE TABLE IF NOT EXISTS `hr_overtime_apply` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `apply_no` varchar(50) NOT NULL COMMENT '申请单号',
+  `user_id` bigint NOT NULL COMMENT '申请人用户ID',
+  `employee_id` bigint DEFAULT NULL COMMENT '申请人员工ID',
+  `overtime_date` date NOT NULL COMMENT '加班日期',
+  `start_time` datetime NOT NULL COMMENT '加班开始时间',
+  `end_time` datetime NOT NULL COMMENT '加班结束时间',
+  `hours` decimal(6,2) DEFAULT 0.00 COMMENT '加班时长(小时)',
+  `reason` varchar(500) DEFAULT NULL COMMENT '加班原因',
+  `status` varchar(30) DEFAULT 'SUBMITTED' COMMENT '申请状态',
+  `current_instance_id` bigint DEFAULT NULL COMMENT '当前工作流实例ID',
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` tinyint DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hr_overtime_apply_no` (`apply_no`),
+  KEY `idx_hr_overtime_apply_user` (`user_id`),
+  KEY `idx_hr_overtime_apply_date` (`overtime_date`),
+  KEY `idx_hr_overtime_apply_status` (`status`),
+  KEY `idx_hr_overtime_apply_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='加班申请表';
+
+-- ============================================================================
+-- 9. Workflow Template Upgrade (Phase 2)
+-- ============================================================================
+
+-- 升级工作流模板节点表，添加节点类型和审批模式字段
+-- 使用存储过程检查字段是否存在，兼容MySQL 5.7
+DELIMITER //
+CREATE PROCEDURE IF NOT EXISTS add_column_if_not_exists()
+BEGIN
+    -- 添加node_type字段
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS 
+                   WHERE table_schema = DATABASE() 
+                   AND table_name = 'hr_workflow_template_node' 
+                   AND column_name = 'node_type') THEN
+        ALTER TABLE `hr_workflow_template_node`
+        ADD COLUMN `node_type` varchar(20) DEFAULT 'APPROVAL' COMMENT '节点类型(APPROVAL-审批节点,CC-抄送节点)' AFTER `node_name`;
+    END IF;
+    
+    -- 添加approval_mode字段
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS 
+                   WHERE table_schema = DATABASE() 
+                   AND table_name = 'hr_workflow_template_node' 
+                   AND column_name = 'approval_mode') THEN
+        ALTER TABLE `hr_workflow_template_node`
+        ADD COLUMN `approval_mode` varchar(20) DEFAULT 'ANY' COMMENT '审批模式(ANY-任一审批,ALL-全部审批,SEQUENTIAL-顺序审批)' AFTER `node_type`;
+    END IF;
+END //
+DELIMITER ;
+
+-- 执行存储过程
+CALL add_column_if_not_exists();
+
+-- 删除存储过程
+DROP PROCEDURE IF EXISTS add_column_if_not_exists;
+
+-- 更新现有节点的默认值
+UPDATE `hr_workflow_template_node`
+SET `node_type` = 'APPROVAL'
+WHERE `node_type` IS NULL OR `node_type` = '';
+
+UPDATE `hr_workflow_template_node`
+SET `approval_mode` = 'ANY'
+WHERE `approval_mode` IS NULL OR `approval_mode` = '';
+
+-- 工作流模板节点审批人表
+CREATE TABLE IF NOT EXISTS `hr_workflow_template_node_approver` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `template_node_id` bigint NOT NULL COMMENT '模板节点ID',
+  `approver_order` int DEFAULT 1 COMMENT '审批顺序',
+  `approver_type` varchar(30) NOT NULL COMMENT '审批人类型',
+  `approver_role_code` varchar(50) DEFAULT NULL COMMENT '审批人角色编码',
+  `approver_user_id` bigint DEFAULT NULL COMMENT '审批人用户ID',
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` tinyint DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_wf_node_approver_node` (`template_node_id`),
+  KEY `idx_hr_wf_node_approver_type` (`approver_type`),
+  KEY `idx_hr_wf_node_approver_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流模板节点审批人表';
+
+-- 工作流模板节点抄送表
+CREATE TABLE IF NOT EXISTS `hr_workflow_template_node_cc` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `template_node_id` bigint NOT NULL COMMENT '模板节点ID',
+  `cc_order` int DEFAULT 1 COMMENT '抄送顺序',
+  `cc_type` varchar(30) NOT NULL COMMENT '抄送类型',
+  `cc_role_code` varchar(50) DEFAULT NULL COMMENT '抄送角色编码',
+  `cc_user_id` bigint DEFAULT NULL COMMENT '抄送用户ID',
+  `cc_dept_id` bigint DEFAULT NULL COMMENT '抄送部门ID',
+  `cc_timing` varchar(30) DEFAULT 'AFTER_APPROVAL' COMMENT '抄送时机',
+  `created_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` tinyint DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`),
+  KEY `idx_hr_wf_node_cc_node` (`template_node_id`),
+  KEY `idx_hr_wf_node_cc_type` (`cc_type`),
+  KEY `idx_hr_wf_node_cc_deleted` (`deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流模板节点抄送表';
+
+-- 迁移现有节点的审批人数据到审批人表
+INSERT INTO `hr_workflow_template_node_approver`
+(`template_node_id`, `approver_order`, `approver_type`, `approver_role_code`, `approver_user_id`, `created_time`, `updated_time`, `deleted`)
+SELECT n.id, 1, n.approver_type, n.approver_role_code, n.approver_user_id, NOW(), NOW(), 0
+FROM `hr_workflow_template_node` n
+WHERE n.deleted = 0
+  AND IFNULL(n.node_type, 'APPROVAL') = 'APPROVAL'
+  AND n.approver_type IS NOT NULL
+  AND n.approver_type <> ''
+  AND NOT EXISTS (
+      SELECT 1
+      FROM `hr_workflow_template_node_approver` a
+      WHERE a.template_node_id = n.id
+        AND a.deleted = 0
+  );
+
+-- ============================================================================
+-- 10. 权限修复已在上方sys_user_role插入中完成（user_id=1, role_id=2）
+-- ============================================================================
 
 SET FOREIGN_KEY_CHECKS = 1;
