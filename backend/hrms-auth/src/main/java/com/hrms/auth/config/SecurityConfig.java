@@ -118,7 +118,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-resources/**",
                     "/webjars/**",
-                    "/actuator/**"
+                    "/actuator/**",
+                    "/error"
                 ).permitAll()
                 
                 // 其他所有请求都需要认证

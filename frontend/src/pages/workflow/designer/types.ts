@@ -230,6 +230,7 @@ export interface WorkflowTemplateModel {
   templateName: string
   templateCode: string
   category: string
+  businessType?: string
   status: WorkflowTemplateStatus
   version: number
   updatedAt: string

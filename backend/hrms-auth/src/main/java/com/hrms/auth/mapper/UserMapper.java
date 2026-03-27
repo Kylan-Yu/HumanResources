@@ -55,19 +55,19 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 检查用户名是否存在
      */
-    @Select("SELECT COUNT(1) FROM sys_user WHERE username = #{username} AND deleted = 0 AND id != #{excludeId}")
+    @Select("SELECT COUNT(1) FROM sys_user WHERE username = #{username} AND deleted = 0 AND (#{excludeId} IS NULL OR id != #{excludeId})")
     int checkUsernameExists(@Param("username") String username, @Param("excludeId") Long excludeId);
 
     /**
      * 检查手机号是否存在
      */
-    @Select("SELECT COUNT(1) FROM sys_user WHERE phone = #{mobile} AND deleted = 0 AND id != #{excludeId}")
+    @Select("SELECT COUNT(1) FROM sys_user WHERE phone = #{mobile} AND deleted = 0 AND (#{excludeId} IS NULL OR id != #{excludeId})")
     int checkMobileExists(@Param("mobile") String mobile, @Param("excludeId") Long excludeId);
 
     /**
      * 检查邮箱是否存在
      */
-    @Select("SELECT COUNT(1) FROM sys_user WHERE email = #{email} AND deleted = 0 AND id != #{excludeId}")
+    @Select("SELECT COUNT(1) FROM sys_user WHERE email = #{email} AND deleted = 0 AND (#{excludeId} IS NULL OR id != #{excludeId})")
     int checkEmailExists(@Param("email") String email, @Param("excludeId") Long excludeId);
 
     /**

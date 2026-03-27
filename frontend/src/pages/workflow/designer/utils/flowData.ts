@@ -707,7 +707,7 @@ export const synchronizeWorkflowTopology = (
 const getConditionBranchSummary = (node: ConditionBranchWorkflowNode): string[] => {
   return [
     node.config.expression || '未配置表达式',
-    `浼樺厛绾э細${node.config.priority}`,
+    `优先级：${node.config.priority}`,
     node.config.isDefault ? '默认分支' : '普通分支'
   ]
 }
@@ -1040,7 +1040,18 @@ export const normalizeTemplateModel = (
   const rawNodes = getRawDefinitionNodes(template)
   const rawEdges = getRawDefinitionEdges(template)
   if (!rawNodes.length) {
-    return fallback
+    return createDefaultTemplateModel({
+      templateId: template.templateId || fallback.templateId,
+      templateName: template.templateName || fallback.templateName,
+      templateCode: template.templateCode || fallback.templateCode,
+      category: template.category || fallback.category,
+      businessType: template.businessType || fallback.businessType,
+      status: isWorkflowTemplateStatus(String(template.status || ''))
+        ? (template.status as WorkflowTemplateStatus)
+        : fallback.status,
+      version: Number(template.version || 1),
+      updatedAt: template.updatedAt || fallback.updatedAt
+    })
   }
 
   let hasInvalidPosition = false
@@ -1096,6 +1107,7 @@ export const normalizeTemplateModel = (
     templateName: template.templateName || DEFAULT_TEMPLATE_NAME,
     templateCode: template.templateCode || DEFAULT_TEMPLATE_CODE,
     category: template.category || DEFAULT_TEMPLATE_CATEGORY,
+    businessType: template.businessType,
     status: templateStatus,
     version: Number(template.version || 1),
     updatedAt: template.updatedAt || '',
@@ -1115,6 +1127,7 @@ interface DefaultTemplateOptions {
   templateName?: string
   templateCode?: string
   category?: string
+  businessType?: string
   status?: WorkflowTemplateStatus
   version?: number
   updatedAt?: string
@@ -1133,7 +1146,7 @@ export const createDefaultTemplateModel = (options?: DefaultTemplateOptions): Wo
   const approval = createWorkflowNode({
     type: 'approval',
     id: 'node_approval_1',
-    name: '鐩村睘涓荤瀹℃壒',
+    name: '直属主管审批',
     config: {
       approvalMode: 'any_one',
       assigneeType: 'direct_leader',
@@ -1168,6 +1181,7 @@ export const createDefaultTemplateModel = (options?: DefaultTemplateOptions): Wo
     templateName: options?.templateName || DEFAULT_TEMPLATE_NAME,
     templateCode: options?.templateCode || DEFAULT_TEMPLATE_CODE,
     category: options?.category || DEFAULT_TEMPLATE_CATEGORY,
+    businessType: options?.businessType,
     status: options?.status || DEFAULT_TEMPLATE_STATUS,
     version: options?.version || 1,
     updatedAt: options?.updatedAt || '',
@@ -1187,6 +1201,7 @@ export const buildTemplatePayload = (params: {
   templateName: string
   templateCode: string
   category: string
+  businessType?: string
   status: WorkflowTemplateStatus
   version: number
   updatedAt: string
@@ -1205,6 +1220,7 @@ export const buildTemplatePayload = (params: {
     templateName: params.templateName,
     templateCode: params.templateCode,
     category: params.category,
+    businessType: params.businessType,
     status: params.status,
     version: params.version,
     updatedAt: params.updatedAt,

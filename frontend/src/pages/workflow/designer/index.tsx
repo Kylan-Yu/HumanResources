@@ -1278,7 +1278,7 @@ const WorkflowDesignerPage: React.FC = () => {
               {isDirty ? <Tag color="processing">未保存修改</Tag> : <Tag color="success">已保存</Tag>}
             </Space>
             <Button size="small" onClick={() => canvasRef.current?.fitView()}>
-              閫傞厤鐢诲竷
+              适配画布
             </Button>
           </div>
 

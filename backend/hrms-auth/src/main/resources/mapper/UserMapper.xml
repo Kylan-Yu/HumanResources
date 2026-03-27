@@ -21,12 +21,6 @@
         <if test="query.status != null">
             AND status = #{query.status}
         </if>
-        <if test="query.orgId != null">
-            AND 1 = 1
-        </if>
-        <if test="query.deptId != null">
-            AND 1 = 1
-        </if>
         <if test="query.industryType != null and query.industryType != ''">
             AND industry_type = #{query.industryType}
         </if>

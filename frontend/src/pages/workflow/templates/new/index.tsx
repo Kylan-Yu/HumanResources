@@ -20,6 +20,9 @@ const WorkflowTemplateCreatePage: React.FC = () => {
 
     try {
       const created = await createWorkflowTemplate(values)
+      if (!created.templateId) {
+        throw new Error('创建接口未返回模板标识')
+      }
       message.success('模板创建成功，进入流程设计')
       navigate(`/workflow/templates/${created.templateId}/design`)
     } catch (error) {

@@ -287,7 +287,7 @@ public class PatchApplicationController {
                         SELECT id
                         FROM hr_workflow_template
                         WHERE business_type = 'PATCH'
-                          AND status = 'ENABLED'
+                          AND (LOWER(status) = 'published' OR UPPER(status) = 'ENABLED')
                           AND deleted = 0
                         ORDER BY version_no DESC, id DESC
                         LIMIT 1

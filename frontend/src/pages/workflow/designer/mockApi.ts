@@ -38,6 +38,29 @@ const normalizeStatus = (status: unknown): WorkflowTemplateStatus => {
   return 'draft'
 }
 
+const inferBusinessType = (templateId?: string, templateCode?: string): string => {
+  const value = String(templateCode || templateId || '').trim().toUpperCase().replace(/-/g, '_')
+  const codeMatch = value.match(/^([A-Z0-9]+)_PROCESS_\d+$/)
+  if (codeMatch?.[1]) {
+    return codeMatch[1]
+  }
+  const keyMatch = String(templateId || '')
+    .trim()
+    .toLowerCase()
+    .match(/^([a-z0-9]+)_process_\d+$/)
+  if (keyMatch?.[1]) {
+    return keyMatch[1].toUpperCase()
+  }
+  return 'GENERAL'
+}
+
+const inferTemplateIdFromCode = (templateCode?: string): string => {
+  if (!templateCode) {
+    return ''
+  }
+  return templateCode.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
+}
+
 const mapApiTemplate = (raw: any, fallbackTemplateId?: string): WorkflowTemplateModel => {
   const definition =
     raw?.definition ||
@@ -54,6 +77,9 @@ const mapApiTemplate = (raw: any, fallbackTemplateId?: string): WorkflowTemplate
     templateName: String(raw?.templateName || DEFAULT_TEMPLATE_NAME),
     templateCode: String(raw?.templateCode || (fallbackTemplateId || 'TEMPLATE')),
     category: String(raw?.category || DEFAULT_TEMPLATE_CATEGORY),
+    businessType: String(
+      raw?.businessType || inferBusinessType(raw?.templateId || fallbackTemplateId, raw?.templateCode)
+    ),
     status: normalizeStatus(raw?.status),
     version: Number(raw?.version || raw?.currentVersion || 1),
     updatedAt: String(raw?.updatedAt || nowText()),
@@ -76,6 +102,7 @@ const buildSnapshotPayload = (payload: WorkflowTemplateModel): Record<string, un
     templateName: payload.templateName,
     templateCode: payload.templateCode,
     category: payload.category,
+    businessType: payload.businessType || inferBusinessType(payload.templateId, payload.templateCode),
     status: payload.status,
     version: payload.version,
     viewport: payload.viewport || { x: 0, y: 0, zoom: 1 },
@@ -91,6 +118,7 @@ const buildSnapshotPayload = (payload: WorkflowTemplateModel): Record<string, un
     templateName: payload.templateName,
     templateCode: payload.templateCode,
     category: payload.category,
+    businessType: payload.businessType || inferBusinessType(payload.templateId, payload.templateCode),
     status: payload.status,
     version: payload.version,
     updatedAt: payload.updatedAt,
@@ -124,13 +152,15 @@ export const getWorkflowTemplateCategories = async (): Promise<string[]> => {
 export const createWorkflowTemplate = async (
   input: CreateWorkflowTemplateInput
 ): Promise<WorkflowTemplateModel> => {
+  const inferredTemplateId = inferTemplateIdFromCode(input.templateCode)
   const response = await post<any>('/workflow/templates', {
+    templateId: inferredTemplateId,
     templateName: input.templateName,
     templateCode: input.templateCode,
     category: input.category,
     status: 'draft'
   })
-  return mapApiTemplate(response.data)
+  return mapApiTemplate(response.data, inferredTemplateId)
 }
 
 export const duplicateWorkflowTemplate = async (templateId: string): Promise<WorkflowTemplateModel> => {

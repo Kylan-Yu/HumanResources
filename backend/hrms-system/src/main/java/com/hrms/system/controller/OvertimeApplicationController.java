@@ -298,7 +298,7 @@ public class OvertimeApplicationController {
                         SELECT id
                         FROM hr_workflow_template
                         WHERE business_type = 'OVERTIME'
-                          AND status = 'ENABLED'
+                          AND (LOWER(status) = 'published' OR UPPER(status) = 'ENABLED')
                           AND deleted = 0
                         ORDER BY version_no DESC, id DESC
                         LIMIT 1

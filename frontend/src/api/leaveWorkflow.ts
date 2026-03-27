@@ -15,13 +15,13 @@ export const workflowTaskAction = (taskId: number, data: any) => post<boolean>(`
 
 export const getWorkflowTemplatePage = (params: any) => get<PageResult<any>>('/workflow/templates/page', params)
 
-export const getWorkflowTemplateDetail = (id: number) => get<any>(`/workflow/templates/${id}`)
+export const getWorkflowTemplateDetail = (id: string) => get<any>(`/workflow/templates/${id}`)
 
-export const createWorkflowTemplate = (data: any) => post<number>('/workflow/templates', data)
+export const createWorkflowTemplate = (data: any) => post<any>('/workflow/templates', data)
 
-export const updateWorkflowTemplate = (id: number, data: any) => put<boolean>(`/workflow/templates/${id}`, data)
+export const updateWorkflowTemplate = (id: string, data: any) => put<any>(`/workflow/templates/${id}`, data)
 
-export const deleteWorkflowTemplate = (id: number) => del<boolean>(`/workflow/templates/${id}`)
+export const deleteWorkflowTemplate = (id: string) => del<boolean>(`/workflow/templates/${id}`)
 
 export const getWorkflowTemplateNodes = (id: number) => {
   console.log('🔍 [前端] 请求工作流模板节点:', { id, url: `/workflow/templates/${id}/nodes` })
