@@ -1,12 +1,8 @@
 ﻿import React from 'react'
 import { Form, Input, Select, Switch } from 'antd'
-import {
-  CC_TARGET_OPTIONS,
-  MOCK_POSITION_OPTIONS,
-  MOCK_ROLE_OPTIONS,
-  MOCK_USER_OPTIONS
-} from '../../constants'
+import { CC_TARGET_OPTIONS } from '../../constants'
 import type { CcNodeConfig, CcWorkflowNode } from '../../types'
+import { useWorkflowActorOptions } from '../../hooks/useWorkflowActorOptions'
 
 interface CcFormProps {
   node: CcWorkflowNode
@@ -16,6 +12,7 @@ interface CcFormProps {
 
 const CcForm: React.FC<CcFormProps> = ({ node, onNameChange, onConfigChange }) => {
   const { config } = node
+  const { roleOptions, userOptions, positionOptions, loading } = useWorkflowActorOptions()
 
   return (
     <Form layout="vertical" className="workflow-property-form">
@@ -43,7 +40,8 @@ const CcForm: React.FC<CcFormProps> = ({ node, onNameChange, onConfigChange }) =
           <Select
             mode="multiple"
             value={config.roleIds}
-            options={MOCK_ROLE_OPTIONS}
+            options={roleOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ roleIds: value })}
           />
         </Form.Item>
@@ -54,7 +52,8 @@ const CcForm: React.FC<CcFormProps> = ({ node, onNameChange, onConfigChange }) =
           <Select
             mode="multiple"
             value={config.positionIds}
-            options={MOCK_POSITION_OPTIONS}
+            options={positionOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ positionIds: value })}
           />
         </Form.Item>
@@ -65,7 +64,8 @@ const CcForm: React.FC<CcFormProps> = ({ node, onNameChange, onConfigChange }) =
           <Select
             mode="multiple"
             value={config.userIds}
-            options={MOCK_USER_OPTIONS}
+            options={userOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ userIds: value })}
           />
         </Form.Item>

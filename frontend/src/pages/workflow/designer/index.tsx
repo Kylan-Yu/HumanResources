@@ -23,7 +23,6 @@ import {
 } from './mockApi'
 import {
   buildTemplatePayload,
-  createDefaultTemplateModel,
   normalizeTemplateModel,
   synchronizeWorkflowTopology,
   toReactFlowElements
@@ -357,24 +356,8 @@ const WorkflowDesignerPage: React.FC = () => {
         setIsDirty(false)
       } catch (error) {
         console.error(error)
-        console.log('[workflow-designer] load failed, fallback to default template', {
-          templateId: templateIdFromRoute
-        })
-        message.error('加载流程模板失败')
-        const fallback = createDefaultTemplateModel({ templateId: templateIdFromRoute })
-        setTemplateId(fallback.templateId)
-        setTemplateName(fallback.templateName)
-        setTemplateCode(fallback.templateCode)
-        setTemplateCategory(fallback.category)
-        setTemplateStatus(fallback.status)
-        setUpdatedAt(fallback.updatedAt)
-        setVersion(fallback.version)
-        resetHistoryWithSnapshot({ nodes: fallback.nodes, edges: fallback.edges })
-        setSelectedNodeId(fallback.nodes[0]?.id || null)
-        const fallbackViewport = fallback.viewport || { x: 0, y: 0, zoom: 1 }
-        setViewport(fallbackViewport)
-        setInitialViewport(fallbackViewport)
-        setIsDirty(false)
+        message.error('加载流程模板失败，已返回列表页')
+        navigate('/workflow/templates', { replace: true })
       }
     }
 

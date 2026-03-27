@@ -1,89 +1,213 @@
 -- ============================================================================
--- HRMS Phase 3 - Workflow Snapshot / Versioning / UTF8MB4
--- Date: 2026-03-26
+-- HRMS Phase 3 - Workflow Snapshot / Versioning Upgrade
+-- Date: 2026-03-27
 -- ============================================================================
 
 USE `hrms_db`;
 
--- 1) 主模板表增强：当前定义、布局、快照、发布快照
-ALTER TABLE `hr_workflow_template`
-    ADD COLUMN IF NOT EXISTS `template_id` varchar(64) NULL COMMENT '模板业务ID' AFTER `id`,
-    ADD COLUMN IF NOT EXISTS `template_code` varchar(100) NULL COMMENT '模板编码' AFTER `template_name`,
-    ADD COLUMN IF NOT EXISTS `category` varchar(50) NULL COMMENT '流程分类' AFTER `business_type`,
-    ADD COLUMN IF NOT EXISTS `current_version` int DEFAULT 1 COMMENT '当前版本号' AFTER `status`,
-    ADD COLUMN IF NOT EXISTS `latest_definition_json` JSON NULL COMMENT '最新流程定义JSON' AFTER `remark`,
-    ADD COLUMN IF NOT EXISTS `latest_layout_json` JSON NULL COMMENT '最新布局JSON' AFTER `latest_definition_json`,
-    ADD COLUMN IF NOT EXISTS `latest_snapshot_json` JSON NULL COMMENT '最新完整快照JSON' AFTER `latest_layout_json`,
-    ADD COLUMN IF NOT EXISTS `published_version` int DEFAULT NULL COMMENT '已发布版本号' AFTER `latest_snapshot_json`,
-    ADD COLUMN IF NOT EXISTS `published_snapshot_json` JSON NULL COMMENT '已发布快照JSON' AFTER `published_version`,
-    ADD COLUMN IF NOT EXISTS `created_by` bigint NULL COMMENT '创建人ID' AFTER `published_snapshot_json`,
-    ADD COLUMN IF NOT EXISTS `updated_by` bigint NULL COMMENT '更新人ID' AFTER `created_by`;
+DROP PROCEDURE IF EXISTS `upgrade_workflow_template_phase3`;
+DELIMITER $$
+CREATE PROCEDURE `upgrade_workflow_template_phase3`()
+BEGIN
+    DECLARE v_template_id_type VARCHAR(32);
+    DECLARE v_template_code_type VARCHAR(32);
+    DECLARE v_category_type VARCHAR(32);
 
--- 2) 历史版本表
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'template_id'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `template_id` VARCHAR(64) DEFAULT NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'template_code'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `template_code` VARCHAR(100) DEFAULT NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'category'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `category` VARCHAR(50) DEFAULT NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'current_version'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `current_version` INT DEFAULT 1;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'latest_definition_json'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `latest_definition_json` LONGTEXT;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'latest_layout_json'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `latest_layout_json` LONGTEXT;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'latest_snapshot_json'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `latest_snapshot_json` LONGTEXT;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'published_version'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `published_version` INT DEFAULT NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'published_snapshot_json'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `published_snapshot_json` LONGTEXT;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'created_by'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `created_by` BIGINT DEFAULT NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE table_schema = DATABASE()
+          AND table_name = 'hr_workflow_template'
+          AND column_name = 'updated_by'
+    ) THEN
+        ALTER TABLE `hr_workflow_template` ADD COLUMN `updated_by` BIGINT DEFAULT NULL;
+    END IF;
+
+    SELECT LOWER(data_type) INTO v_template_id_type
+    FROM information_schema.COLUMNS
+    WHERE table_schema = DATABASE()
+      AND table_name = 'hr_workflow_template'
+      AND column_name = 'template_id'
+    LIMIT 1;
+
+    IF v_template_id_type IS NOT NULL
+       AND v_template_id_type NOT IN ('varchar', 'char', 'text', 'tinytext', 'mediumtext', 'longtext') THEN
+        ALTER TABLE `hr_workflow_template` MODIFY COLUMN `template_id` VARCHAR(64) DEFAULT NULL;
+    END IF;
+
+    SELECT LOWER(data_type) INTO v_template_code_type
+    FROM information_schema.COLUMNS
+    WHERE table_schema = DATABASE()
+      AND table_name = 'hr_workflow_template'
+      AND column_name = 'template_code'
+    LIMIT 1;
+
+    IF v_template_code_type IS NOT NULL
+       AND v_template_code_type NOT IN ('varchar', 'char', 'text', 'tinytext', 'mediumtext', 'longtext') THEN
+        ALTER TABLE `hr_workflow_template` MODIFY COLUMN `template_code` VARCHAR(100) DEFAULT NULL;
+    END IF;
+
+    SELECT LOWER(data_type) INTO v_category_type
+    FROM information_schema.COLUMNS
+    WHERE table_schema = DATABASE()
+      AND table_name = 'hr_workflow_template'
+      AND column_name = 'category'
+    LIMIT 1;
+
+    IF v_category_type IS NOT NULL
+       AND v_category_type NOT IN ('varchar', 'char', 'text', 'tinytext', 'mediumtext', 'longtext') THEN
+        ALTER TABLE `hr_workflow_template` MODIFY COLUMN `category` VARCHAR(50) DEFAULT NULL;
+    END IF;
+END$$
+DELIMITER ;
+
+CALL `upgrade_workflow_template_phase3`();
+DROP PROCEDURE IF EXISTS `upgrade_workflow_template_phase3`;
+
 CREATE TABLE IF NOT EXISTS `hr_workflow_template_version` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `template_id` varchar(64) NOT NULL COMMENT '模板业务ID',
-  `version_no` int NOT NULL COMMENT '版本号',
-  `action_type` varchar(20) NOT NULL COMMENT 'save/publish/restore',
-  `template_name` varchar(100) NOT NULL COMMENT '模板名称',
-  `status` varchar(20) DEFAULT 'draft' COMMENT '模板状态',
-  `snapshot_json` JSON NULL COMMENT '完整快照',
-  `definition_json` JSON NULL COMMENT '流程定义',
-  `layout_json` JSON NULL COMMENT '布局信息',
-  `operator_id` bigint DEFAULT NULL COMMENT '操作人ID',
-  `operator_name` varchar(100) DEFAULT NULL COMMENT '操作人',
-  `remark` varchar(500) DEFAULT NULL COMMENT '备注',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `template_id` VARCHAR(64) NOT NULL,
+  `version_no` INT NOT NULL,
+  `action_type` VARCHAR(20) NOT NULL,
+  `template_name` VARCHAR(100) NOT NULL,
+  `status` VARCHAR(20) DEFAULT 'draft',
+  `snapshot_json` LONGTEXT,
+  `definition_json` LONGTEXT,
+  `layout_json` LONGTEXT,
+  `operator_id` BIGINT DEFAULT NULL,
+  `operator_name` VARCHAR(100) DEFAULT NULL,
+  `remark` VARCHAR(500) DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_wf_tpl_ver_template_version` (`template_id`, `version_no`),
   KEY `idx_wf_tpl_ver_template_id` (`template_id`),
-  KEY `idx_wf_tpl_ver_action_type` (`action_type`),
   KEY `idx_wf_tpl_ver_created_at` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='流程模板历史版本表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3) 数据修复与字段回填
 UPDATE `hr_workflow_template`
 SET `template_id` = CONCAT('tpl_', `id`)
-WHERE (`template_id` IS NULL OR `template_id` = '');
+WHERE (`template_id` IS NULL OR CAST(`template_id` AS CHAR) = '')
+  AND `deleted` = 0;
 
 UPDATE `hr_workflow_template`
-SET `template_code` = UPPER(REPLACE(`template_id`, '-', '_'))
-WHERE (`template_code` IS NULL OR `template_code` = '');
+SET `template_code` = UPPER(REPLACE(CAST(`template_id` AS CHAR), '-', '_'))
+WHERE (`template_code` IS NULL OR CAST(`template_code` AS CHAR) = '')
+  AND `deleted` = 0;
 
 UPDATE `hr_workflow_template`
 SET `category` = COALESCE(NULLIF(`category`, ''), NULLIF(`business_type`, ''), '通用')
-WHERE (`category` IS NULL OR `category` = '');
+WHERE (`category` IS NULL OR `category` = '')
+  AND `deleted` = 0;
 
 UPDATE `hr_workflow_template`
-SET `current_version` = COALESCE(`current_version`, `version_no`, 1)
-WHERE `current_version` IS NULL OR `current_version` <= 0;
+SET `current_version` = IFNULL(NULLIF(`current_version`, 0), IFNULL(`version_no`, 1))
+WHERE (`current_version` IS NULL OR `current_version` = 0)
+  AND `deleted` = 0;
 
 UPDATE `hr_workflow_template`
 SET `status` = CASE
-    WHEN LOWER(`status`) = 'enabled' THEN 'published'
-    WHEN LOWER(`status`) = 'disabled' THEN 'disabled'
-    WHEN LOWER(`status`) = 'published' THEN 'published'
-    WHEN LOWER(`status`) = 'draft' THEN 'draft'
-    ELSE 'draft'
-END;
-
--- 4) 唯一约束
-ALTER TABLE `hr_workflow_template`
-    ADD UNIQUE KEY `uk_hr_workflow_template_template_id` (`template_id`),
-    ADD UNIQUE KEY `uk_hr_workflow_template_template_code` (`template_code`);
-
--- 5) 字符集统一为 utf8mb4
-ALTER TABLE `hr_workflow_template`
-    CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-ALTER TABLE `hr_workflow_template_node`
-    CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-ALTER TABLE `hr_workflow_template_node_approver`
-    CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-ALTER TABLE `hr_workflow_template_node_cc`
-    CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 如有权限，建议同步执行：
--- ALTER DATABASE `hrms_db` CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+  WHEN UPPER(IFNULL(`status`, '')) IN ('ENABLED', 'PUBLISHED') THEN 'ENABLED'
+  WHEN UPPER(IFNULL(`status`, '')) = 'DISABLED' THEN 'DISABLED'
+  ELSE 'DRAFT'
+END
+WHERE `deleted` = 0;

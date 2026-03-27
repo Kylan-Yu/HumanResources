@@ -1037,10 +1037,24 @@ export const normalizeTemplateModel = (
     return fallback
   }
 
+  const templateStatus = isWorkflowTemplateStatus(String(template.status || ''))
+    ? (template.status as WorkflowTemplateStatus)
+    : DEFAULT_TEMPLATE_STATUS
+
+  const fallbackWithTemplateMeta = createDefaultTemplateModel({
+    templateId: template.templateId || DEFAULT_TEMPLATE_ID,
+    templateName: template.templateName || DEFAULT_TEMPLATE_NAME,
+    templateCode: template.templateCode || DEFAULT_TEMPLATE_CODE,
+    category: template.category || DEFAULT_TEMPLATE_CATEGORY,
+    status: templateStatus,
+    version: Number(template.version || 1),
+    updatedAt: template.updatedAt || ''
+  })
+
   const rawNodes = getRawDefinitionNodes(template)
   const rawEdges = getRawDefinitionEdges(template)
   if (!rawNodes.length) {
-    return fallback
+    return fallbackWithTemplateMeta
   }
 
   let hasInvalidPosition = false
@@ -1074,7 +1088,7 @@ export const normalizeTemplateModel = (
     .filter((edge) => nodeIdSet.has(edge.source) && nodeIdSet.has(edge.target))
 
   if (!nodes.length) {
-    return fallback
+    return fallbackWithTemplateMeta
   }
 
   const synced = synchronizeWorkflowTopology(
@@ -1086,10 +1100,6 @@ export const normalizeTemplateModel = (
       forceAutoLayout: hasInvalidPosition
     }
   )
-
-  const templateStatus = isWorkflowTemplateStatus(String(template.status || ''))
-    ? (template.status as WorkflowTemplateStatus)
-    : DEFAULT_TEMPLATE_STATUS
 
   return {
     templateId: template.templateId || DEFAULT_TEMPLATE_ID,

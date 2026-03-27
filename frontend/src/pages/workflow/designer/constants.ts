@@ -137,34 +137,6 @@ export const PARALLEL_TIMEOUT_STRATEGY_OPTIONS: Array<{ label: string; value: Pa
   { label: '通知管理员', value: 'notify_admin' }
 ]
 
-export const MOCK_ROLE_OPTIONS = [
-  { label: 'HR专员', value: 'role_hr_specialist' },
-  { label: '部门经理', value: 'role_dept_manager' },
-  { label: '总监', value: 'role_director' },
-  { label: '财务BP', value: 'role_finance_bp' }
-]
-
-export const MOCK_POSITION_OPTIONS = [
-  { label: 'HRBP', value: 'position_hrbp' },
-  { label: '运营经理', value: 'position_ops_manager' },
-  { label: '产品经理', value: 'position_product_manager' },
-  { label: '技术负责人', value: 'position_tech_lead' }
-]
-
-export const MOCK_USER_OPTIONS = [
-  { label: '张三', value: 'user_zhangsan' },
-  { label: '李四', value: 'user_lisi' },
-  { label: '王五', value: 'user_wangwu' },
-  { label: '赵六', value: 'user_zhaoliu' }
-]
-
-export const MOCK_DEPARTMENT_OPTIONS = [
-  { label: '人力资源部', value: 'dept_hr' },
-  { label: '技术部', value: 'dept_tech' },
-  { label: '财务部', value: 'dept_finance' },
-  { label: '运营部', value: 'dept_ops' }
-]
-
 export const NODE_PALETTE_ITEMS: Array<{
   type: InsertableNodeType
   title: string
