@@ -1,411 +1,189 @@
-# HRMS - Human Resource Management System
+# HRMS (Spring Cloud + React) - Portfolio Project
 
-## 🚀 Project Overview
+## 1. Project Overview
+This repository is a personal full-stack HRMS project built to demonstrate practical Java backend and React engineering skills.
 
-HRMS is a **enterprise-grade Human Resource Management System** built with modern microservices architecture. This comprehensive platform supports both corporate and healthcare environments, delivering robust capabilities for employee lifecycle management, organizational structure, compensation, performance tracking, attendance management, and training programs.
+The backend is organized as a Spring Cloud multi-module project, and the frontend is a React + TypeScript + Ant Design admin/self-service application.  
+Current implementation is functional for core HR operations, attendance, and workflow-driven leave/patch/overtime approvals.
 
-### 🎯 Key Business Value
+## 2. Why I Built This Project
+I built this project as a realistic system-level portfolio rather than isolated CRUD demos. The goal is to show:
 
-- **Scalable Architecture**: Microservices design ensures horizontal scalability and maintainability
-- **Enterprise Security**: JWT-based authentication with role-based access control (RBAC)
-- **Real-time Analytics**: Advanced dashboards and reporting for data-driven HR decisions
-- **Cross-Platform**: Responsive web application with mobile-friendly interface
-- **Industry Agnostic**: Configurable for various industries including healthcare, technology, and manufacturing
+- service decomposition with Spring Boot/Spring Cloud modules
+- authentication and RBAC in a real menu-driven UI
+- domain modeling for HR data (org, employee, attendance, payroll, recruitment, contract)
+- workflow template configuration plus runtime approval execution
 
----
+## 3. My Role
+I am the primary builder of this repository. I implemented and integrated:
 
-## 🏗️ Technical Architecture
+- backend service modules, SQL schema, and API endpoints
+- React admin/ESS pages and route-level permission handling
+- JWT authentication flow and role/menu-based access control
+- workflow template management and approval runtime for leave/patch/overtime
 
-### Microservices Design Pattern
+## 4. Current Implementation Status
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[React Web Application]
-    end
-    
-    subgraph "API Gateway"
-        B[Spring Cloud Gateway]
-    end
-    
-    subgraph "Microservices"
-        C[Auth Service]
-        D[Employee Service]
-        E[Organization Service]
-        F[Payroll Service]
-        G[Recruitment Service]
-        H[Performance Service]
-        I[Contract Service]
-        J[Training Service]
-    end
-    
-    subgraph "Infrastructure"
-        K[Nacos Registry]
-        L[MySQL Cluster]
-        M[Redis Cache]
-        N[MinIO Storage]
-    end
-    
-    A --> B
-    B --> C
-    B --> D
-    B --> E
-    B --> F
-    B --> G
-    B --> H
-    B --> I
-    B --> J
-    
-    C --> K
-    D --> K
-    E --> K
-    F --> K
-    G --> K
-    H --> K
-    I --> K
-    J --> K
-    
-    C --> L
-    D --> L
-    E --> L
-    F --> L
-    G --> L
-    H --> L
-    I --> L
-    J --> L
-    
-    C --> M
-    D --> M
-    E --> M
-    F --> M
-    G --> M
-    H --> M
-    I --> M
-    J --> M
-    
-    F --> N
-    G --> N
-    H --> N
-```
+### Implemented
+- Authentication: `hrms-auth` provides login/refresh/logout/user-info with JWT.
+- Authorization: role/menu/permission model based on `sys_user`, `sys_role`, `sys_menu`, `sys_user_role`, `sys_role_menu`.
+- Main business APIs: `hrms-system` contains working controllers for users, roles, menus, org/dept/position/rank, employee archive/change, notice, attendance, payroll standard, recruit requirement, contract, profile, and workflow.
+- Employee self-service: profile edit, personal attendance query, leave/patch/overtime application submit and withdraw, "my applications" with progress.
+- Team management: team members, team attendance summary (role-restricted), department notices.
+- Workflow:
+  - template list/create/edit/save/publish/duplicate/delete
+  - template version history and restore
+  - node approver/CC persistence tables
+  - runtime instance/task/record generation for leave/patch/overtime
+  - todo approval actions (approve/reject/return)
+- Frontend: route-based pages for system, org, employee, recruit, payroll, contract, attendance, notice, workflow, ESS, and team modules.
 
-### Technology Stack
+### Partially Implemented
+- Microservice split is partial:
+  - `hrms-auth`, `hrms-system`, `hrms-gateway` are the main runtime path.
+  - `hrms-org`, `hrms-employee`, `hrms-recruit`, `hrms-payroll`, `hrms-contract` have separate service code but are not the default frontend target in local dev.
+- Workflow designer UI supports richer graph editing (including branch/parallel node types), but workflow execution is still centered on linear approval progression (`ANY`/`ALL`/`SEQUENTIAL`) with approval/CC runtime nodes.
+- Infrastructure Docker compose exists for MySQL/Redis/Nacos/MinIO, but full app-container orchestration is not complete.
 
-#### Backend Technologies
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Spring Boot** | 3.0.13 | Core application framework |
-| **Spring Cloud** | 2022.0.4 | Microservices orchestration |
-| **Spring Cloud Alibaba** | 2022.0.0.0 | Service discovery & configuration |
-| **MySQL** | 8.0.33 | Primary relational database |
-| **Redis** | 6.0+ | Distributed caching & sessions |
-| **Nacos** | 2.3.2 | Service registry & configuration center |
-| **MyBatis Plus** | 3.5.3.2 | ORM framework with enhanced features |
-| **JWT** | 0.11.5 | Stateless authentication tokens |
-| **Knife4j** | 4.3.0 | API documentation (Swagger 3) |
+### Planned / Roadmap
+- move more domain logic out of `hrms-system` into dedicated services
+- complete placeholder service modules and unify routing through gateway
+- improve test coverage (unit + integration + frontend tests)
+- harden deployment packaging and environment consistency
 
-#### Frontend Technologies
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React** | 18.2.0 | Component-based UI framework |
-| **TypeScript** | 5.2.2 | Type-safe JavaScript development |
-| **Ant Design** | 5.12.0 | Enterprise UI component library |
-| **Zustand** | 4.4.7 | Lightweight state management |
-| **React Query** | 3.39.3 | Server state management & caching |
-| **Vite** | 4.5.0 | Fast build tool & dev server |
-| **Recharts** | 2.8.0 | Data visualization & charts |
+## 5. Architecture Overview
+Current codebase architecture is microservice-oriented but runtime-concentrated:
 
----
+- Frontend (`frontend`) calls `/api/**`
+- Vite proxy sends `/api/auth/**` to `hrms-auth` (`8081`)
+- other `/api/**` requests go to `hrms-system` (`8082`)
+- `hrms-gateway` (`8080`) exists with static routes to auth/system
+- MySQL is the primary data store (`database/hrms_full_complete.sql`)
 
-## 📋 Core Features
+Data model evidence includes 48 tables across system and HR domains, including workflow template/runtime tables:
 
-### 🔐 Authentication & Authorization
-- **Multi-factor Authentication Support**
-- **Role-Based Access Control (RBAC)**
-- **JWT Token Management**
-- **OAuth2 Integration Ready**
-- **Session Management with Redis**
+- `hr_workflow_template`, `hr_workflow_template_node`
+- `hr_workflow_template_node_approver`, `hr_workflow_template_node_cc`
+- `hr_workflow_instance`, `hr_workflow_task`, `hr_workflow_record`
 
-### 👥 Employee Management
-- **Complete Employee Lifecycle Management**
-- **Organizational Hierarchy Management**
-- **Employee Profile & Document Management**
-- **Position & Department Management**
-- **Employee Self-Service Portal**
+## 6. Implemented Services / Modules
+| Module | Status | Notes |
+|---|---|---|
+| `backend/hrms-auth` | Implemented | JWT auth APIs and security filter chain |
+| `backend/hrms-system` | Implemented (main business service) | Most current business endpoints live here |
+| `backend/hrms-gateway` | Implemented (basic) | Route forwarding to auth/system |
+| `backend/hrms-org` | Partial | Service code exists; not default frontend target |
+| `backend/hrms-employee` | Partial | Service code exists; not default frontend target |
+| `backend/hrms-recruit` | Partial | Service code exists; overlap with system APIs |
+| `backend/hrms-payroll` | Partial | Service code exists; overlap with system APIs |
+| `backend/hrms-contract` | Partial | Service code exists; overlap with system APIs |
+| `backend/hrms-attendance` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-workflow` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-training` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-performance` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-file` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-message` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-report` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-certificate` | Scaffold | Module exists, no main Java implementation |
+| `backend/hrms-schedule` | Scaffold | Module exists, no main Java implementation |
 
-### 💰 Compensation & Benefits
-- **Salary Structure Management**
-- **Payroll Processing Engine**
-- **Benefits Administration**
-- **Compensation Planning & Analytics**
-- **Tax Calculation Engine**
+## 7. Frontend Scope
+Major frontend route groups currently present:
 
-### 📈 Performance Management
-- **Goal Setting & Tracking**
-- **Performance Review Cycles**
-- **360-Degree Feedback System**
-- **Competency Management**
-- **Performance Analytics Dashboard**
+- dashboard and system management (user/role/menu/dict)
+- organization management (org/dept/position/rank)
+- employee archive and change records
+- recruit requirement
+- payroll standard
+- contract management and expiry warning
+- attendance management (shift/record/appeal/statistics)
+- notice center and department notice
+- workflow center (todo, template list, visual designer, history)
+- employee self-service (profile, attendance, leave/patch/overtime, my applications)
+- team management (team members, team attendance)
 
-### 🎯 Recruitment Management
-- **Applicant Tracking System (ATS)**
-- **Job Posting & Career Site**
-- **Interview Scheduling & Management**
-- **Offer Management System**
-- **Recruitment Analytics**
+## 8. Tech Stack
+### Backend
+- Java 17, Spring Boot 3.0.13
+- Spring Cloud 2022.0.4, Spring Cloud Alibaba 2022.0.0.0
+- Spring Security + JWT (`jjwt`)
+- MyBatis-Plus + `NamedParameterJdbcTemplate`
+- MySQL, Redis, Nacos, MinIO
 
-### 📚 Training & Development
-- **Training Program Management**
-- **Course Catalog & Enrollment**
-- **Learning Path Management**
-- **Training Effectiveness Tracking**
-- **Skill Gap Analysis**
+### Frontend
+- React 18 + TypeScript
+- Ant Design 5
+- React Router 6, Zustand, Axios
+- Vite
+- `@xyflow/react` for workflow designer canvas
 
-### 📊 Reporting & Analytics
-- **Real-time HR Dashboards**
-- **Custom Report Builder**
-- **Data Export & Integration**
-- **Predictive Analytics**
-- **Compliance Reporting**
-
----
-
-## 🚀 Quick Start
-
+## 9. Local Setup
 ### Prerequisites
-- **JDK 17+**
-- **Node.js 16+**
-- **MySQL 8.0+**
-- **Redis 6.0+**
-- **Maven 3.6+**
+- JDK 17+
+- Maven 3.8+
+- Node.js 16+
+- Docker (recommended for infra)
 
-### Installation Steps
-
-#### 1. Clone the Repository
+### 1) Start infrastructure
 ```bash
-git clone https://github.com/your-username/hrms.git
-cd hrms
+docker compose -f docker-compose-infra.yml up -d
 ```
 
-#### 2. Database Setup
+### 2) Initialize database
 ```bash
-# Create database
-mysql -u root -p
-CREATE DATABASE hrms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-# Import database schema
-mysql -u root -p hrms < database/init_complete.sql
+mysql -uroot -proot < database/hrms_full_complete.sql
 ```
 
-#### 3. Infrastructure Services
-```bash
-# Start Redis
-redis-server
+Optional phase scripts are available in `database/` for staged workflow/employee-team updates.
 
-# Start Nacos
-cd nacos
-sh startup.sh -m standalone
+### 3) Start backend (minimum working set)
+```bash
+# terminal 1
+cd backend/hrms-auth
+mvn spring-boot:run
+
+# terminal 2
+cd backend/hrms-system
+mvn spring-boot:run
 ```
 
-#### 4. Backend Services
+Optional:
 ```bash
-# Build all services
-cd backend
-mvn clean package -DskipTests
-
-# Start services in order
-./start-services.bat
+cd backend/hrms-gateway
+mvn spring-boot:run
 ```
 
-#### 5. Frontend Application
+### 4) Start frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Access Points
-- **Frontend Application**: http://localhost:3000
-- **API Gateway**: http://localhost:8080
-- **API Documentation**: http://localhost:8080/doc.html
-- **Nacos Console**: http://localhost:8848/nacos
+### 5) Access
+- Frontend: `http://localhost:3000`
+- Auth service: `http://localhost:8081`
+- System service: `http://localhost:8082`
+- Gateway (optional path): `http://localhost:8080`
 
----
+## 10. Key Engineering Decisions
+- **Unified API envelope**: backend endpoints return `Result<T>` and paginated `PageResult<T>` for predictable frontend integration.
+- **Menu-driven RBAC**: backend permission data drives frontend menu visibility and route checks (`/menus/current/tree` + client-side route guard).
+- **Workflow persistence strategy**: template snapshot JSON is stored for designer replay/versioning, while runtime tables store approver/CC execution data.
+- **Pragmatic service delivery**: core flows were first consolidated in `hrms-system` to keep end-to-end features working before full service split.
+- **Soft-delete convention**: many tables use `deleted` flags with audit fields for reversible operations and historical safety.
 
-## 📊 System Architecture Highlights
+## 11. Current Limitations
+- Service decomposition is incomplete; many domains still execute through `hrms-system`.
+- Some service configs are environment-specific/inconsistent (for example, mixed localhost and LAN DB/Nacos settings in different modules).
+- Automated tests are currently minimal in this repository.
+- No confirmed message-queue/event-driven pipeline in current implementation.
+- Documentation under `docs/` is partly generic and not always aligned with current code.
+- Docker support is partial (infra compose exists; full app containerization is not fully wired).
 
-### Microservices Communication
-- **Synchronous Communication**: REST APIs with Spring Cloud Gateway
-- **Asynchronous Communication**: Event-driven architecture with message queues
-- **Service Discovery**: Nacos registry with health checks
-- **Load Balancing**: Ribbon-based client-side load balancing
-
-### Data Management Strategy
-- **Database per Service**: Each microservice has its own database
-- **Distributed Transactions**: Saga pattern for cross-service consistency
-- **Caching Strategy**: Redis for session management and frequently accessed data
-- **Data Consistency**: Eventual consistency with compensation mechanisms
-
-### Security Implementation
-- **Authentication**: JWT-based stateless authentication
-- **Authorization**: RBAC with fine-grained permissions
-- **API Security**: Rate limiting, CORS, and input validation
-- **Data Encryption**: Sensitive data encryption at rest and in transit
-
-### Performance Optimization
-- **Connection Pooling**: HikariCP for database connections
-- **Caching Layers**: Multi-level caching with Redis
-- **Async Processing**: Non-blocking I/O operations
-- **Database Optimization**: Indexing strategies and query optimization
-
----
-
-## 🧪 Testing Strategy
-
-### Test Coverage
-- **Unit Tests**: JUnit 5 with Mockito for service layer
-- **Integration Tests**: Spring Boot Test with TestContainers
-- **API Tests**: REST Assured for endpoint testing
-- **Frontend Tests**: Jest + React Testing Library
-- **E2E Tests**: Cypress for complete user flows
-
-### Quality Assurance
-- **Code Coverage**: Minimum 80% coverage requirement
-- **Static Analysis**: SonarQube integration
-- **Security Testing**: OWASP ZAP for vulnerability scanning
-- **Performance Testing**: JMeter for load testing
-
----
-
-## 📦 Deployment Options
-
-### Development Environment
-- **Local Development**: Docker Compose for complete stack
-- **Hot Reload**: Spring Boot DevTools & Vite HMR
-- **Debugging**: Integrated debugging support
-
-### Production Deployment
-- **Container Orchestration**: Kubernetes deployment manifests
-- **CI/CD Pipeline**: GitHub Actions workflow
-- **Monitoring**: Prometheus + Grafana stack
-- **Logging**: ELK Stack for centralized logging
-
-### Cloud Deployment
-- **AWS**: ECS/RDS/ElastiCache deployment
-- **Azure**: AKS/Azure Database/Redis Cache
-- **Google Cloud**: GKE/Cloud SQL/Memorystore
-
----
-
-## 📈 Performance Metrics
-
-### System Performance
-- **Response Time**: < 200ms for API endpoints
-- **Throughput**: 1000+ requests per second
-- **Availability**: 99.9% uptime SLA
-- **Scalability**: Horizontal scaling support
-
-### Database Performance
-- **Query Optimization**: Indexed queries with < 50ms response
-- **Connection Pooling**: 20 concurrent connections per service
-- **Caching Hit Rate**: 85%+ cache hit ratio
-
----
-
-## 🔧 Configuration Management
-
-### Environment Profiles
-- **Development**: Local development configuration
-- **Testing**: Integration test environment
-- **Staging**: Pre-production environment
-- **Production**: Production-optimized settings
-
-### Feature Flags
-- **Dynamic Configuration**: Nacos-based feature toggles
-- **A/B Testing**: Feature rollout management
-- **Dark Launch**: Safe feature deployment
-
----
-
-## 🛡️ Security Features
-
-### Authentication & Authorization
-- **Multi-tenant Architecture**: Tenant isolation
-- **Password Policies**: Strong password enforcement
-- **Session Management**: Secure session handling
-- **API Security**: Rate limiting and DDoS protection
-
-### Data Protection
-- **PII Protection**: Personal data encryption
-- **Audit Logging**: Complete audit trail
-- **Data Retention**: Configurable retention policies
-- **Compliance**: GDPR and CCPA compliance ready
-
----
-
-## 📚 Documentation
-
-### API Documentation
-- **Swagger/OpenAPI**: Interactive API documentation
-- **Postman Collections**: Ready-to-use API collections
-- **Architecture Docs**: System design documentation
-- **Deployment Guides**: Step-by-step deployment instructions
-
-### Developer Resources
-- **Code Standards**: ESLint + Prettier configuration
-- **Git Workflow**: Feature branch development
-- **Code Reviews**: Pull request templates
-- **Contributing**: Development contribution guidelines
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the community! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🎯 Project Showcase
-
-### Business Impact
-- **Efficiency Improvement**: 40% reduction in HR administrative tasks
-- **Cost Savings**: 25% reduction in HR operational costs
-- **User Satisfaction**: 95% employee satisfaction rate
-- **Scalability**: Supports 10,000+ concurrent users
-
-### Technical Excellence
-- **Modern Architecture**: Cloud-native microservices design
-- **High Performance**: Optimized for enterprise scale
-- **Security First**: Enterprise-grade security implementation
-- **DevOps Ready**: Complete CI/CD pipeline integration
-
----
-
-## 📞 Contact & Support
-
-### Project Team
-- **Technical Lead**: [Your Name](mailto:your.email@example.com)
-- **Architecture**: [Architect Email](mailto:architect@example.com)
-- **Support**: [Support Email](mailto:support@example.com)
-
-### Community
-- **Issues**: [GitHub Issues](https://github.com/your-org/hrms/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/hrms/discussions)
-- **Wiki**: [Project Wiki](https://github.com/your-org/hrms/wiki)
-
----
-
-**© 2024 HRMS Team. Built with ❤️ for modern HR management.**
+## 12. Roadmap
+- complete module-by-module extraction from `hrms-system` to dedicated services
+- unify environment/config conventions across all services
+- add repeatable test suites (backend + frontend)
+- tighten API and schema documentation to match code continuously
+- improve deployment packaging for one-command local startup
