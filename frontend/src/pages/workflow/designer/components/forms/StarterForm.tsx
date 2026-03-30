@@ -1,12 +1,8 @@
 ﻿import React from 'react'
 import { Form, Input, Select } from 'antd'
-import {
-  INITIATOR_SCOPE_OPTIONS,
-  MOCK_DEPARTMENT_OPTIONS,
-  MOCK_ROLE_OPTIONS,
-  MOCK_USER_OPTIONS
-} from '../../constants'
+import { INITIATOR_SCOPE_OPTIONS } from '../../constants'
 import type { StarterNodeConfig, StarterWorkflowNode } from '../../types'
+import { useWorkflowActorOptions } from '../../hooks/useWorkflowActorOptions'
 
 interface StarterFormProps {
   node: StarterWorkflowNode
@@ -16,6 +12,7 @@ interface StarterFormProps {
 
 const StarterForm: React.FC<StarterFormProps> = ({ node, onNameChange, onConfigChange }) => {
   const { config } = node
+  const { roleOptions, userOptions, deptOptions, loading } = useWorkflowActorOptions()
 
   return (
     <Form layout="vertical" className="workflow-property-form">
@@ -43,7 +40,8 @@ const StarterForm: React.FC<StarterFormProps> = ({ node, onNameChange, onConfigC
           <Select
             mode="multiple"
             value={config.roleIds}
-            options={MOCK_ROLE_OPTIONS}
+            options={roleOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ roleIds: value })}
           />
         </Form.Item>
@@ -54,7 +52,8 @@ const StarterForm: React.FC<StarterFormProps> = ({ node, onNameChange, onConfigC
           <Select
             mode="multiple"
             value={config.departmentIds}
-            options={MOCK_DEPARTMENT_OPTIONS}
+            options={deptOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ departmentIds: value })}
           />
         </Form.Item>
@@ -65,7 +64,8 @@ const StarterForm: React.FC<StarterFormProps> = ({ node, onNameChange, onConfigC
           <Select
             mode="multiple"
             value={config.userIds}
-            options={MOCK_USER_OPTIONS}
+            options={userOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ userIds: value })}
           />
         </Form.Item>

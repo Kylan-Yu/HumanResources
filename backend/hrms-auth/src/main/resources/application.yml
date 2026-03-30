@@ -6,19 +6,19 @@ spring:
     name: hrms-auth
   profiles:
     active: dev
+  config:
+    import: 
   cloud:
     nacos:
-      config:
-        import-check:
-          enabled: false
       discovery:
-        server-addr: localhost:8848
-        enabled: true
+        enabled: false
+      config:
+        enabled: false
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/hrms_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.15.100:3306/hrms_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: root
+    password: shice2022mysql
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 5
@@ -32,7 +32,7 @@ spring:
       test-on-borrow: false
       test-on-return: false
   redis:
-    host: localhost
+    host: 192.168.15.100
     port: 6379
     password: 
     database: 0

@@ -3,12 +3,10 @@ import { Form, Input, InputNumber, Select, Switch } from 'antd'
 import {
   APPROVAL_MODE_OPTIONS,
   ASSIGNEE_TYPE_OPTIONS,
-  MOCK_POSITION_OPTIONS,
-  MOCK_ROLE_OPTIONS,
-  MOCK_USER_OPTIONS,
   TIMEOUT_ACTION_OPTIONS
 } from '../../constants'
 import type { ApprovalNodeConfig, ApprovalWorkflowNode } from '../../types'
+import { useWorkflowActorOptions } from '../../hooks/useWorkflowActorOptions'
 
 interface ApprovalFormProps {
   node: ApprovalWorkflowNode
@@ -18,6 +16,7 @@ interface ApprovalFormProps {
 
 const ApprovalForm: React.FC<ApprovalFormProps> = ({ node, onNameChange, onConfigChange }) => {
   const { config } = node
+  const { roleOptions, userOptions, positionOptions, loading } = useWorkflowActorOptions()
 
   return (
     <Form layout="vertical" className="workflow-property-form">
@@ -65,7 +64,8 @@ const ApprovalForm: React.FC<ApprovalFormProps> = ({ node, onNameChange, onConfi
           <Select
             mode="multiple"
             value={config.roleIds}
-            options={MOCK_ROLE_OPTIONS}
+            options={roleOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ roleIds: value })}
           />
         </Form.Item>
@@ -76,7 +76,8 @@ const ApprovalForm: React.FC<ApprovalFormProps> = ({ node, onNameChange, onConfi
           <Select
             mode="multiple"
             value={config.positionIds}
-            options={MOCK_POSITION_OPTIONS}
+            options={positionOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ positionIds: value })}
           />
         </Form.Item>
@@ -87,7 +88,8 @@ const ApprovalForm: React.FC<ApprovalFormProps> = ({ node, onNameChange, onConfi
           <Select
             mode="multiple"
             value={config.userIds}
-            options={MOCK_USER_OPTIONS}
+            options={userOptions}
+            loading={loading}
             onChange={(value) => onConfigChange({ userIds: value })}
           />
         </Form.Item>

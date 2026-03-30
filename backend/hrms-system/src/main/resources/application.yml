@@ -1,5 +1,10 @@
 server:
   port: 8082
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   application:
@@ -8,9 +13,9 @@ spring:
     active: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/hrms_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://192.168.15.100:3306/hrms_db?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: shice2022mysql
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 5
@@ -24,9 +29,9 @@ spring:
       test-on-borrow: false
       test-on-return: false
   redis:
-    host: localhost
+    host: 192.168.15.100
     port: 6379
-    password: 
+    password:
     database: 0
     timeout: 3000ms
     lettuce:
@@ -36,9 +41,9 @@ spring:
         min-idle: 0
         max-wait: -1ms
 
-# MinIO配置
+# MinIO 配置
 minio:
-  endpoint: localhost:9000
+  endpoint: 192.168.15.100:9000
   access-key: minioadmin
   secret-key: minioadmin
   bucket-name: hrms
@@ -48,9 +53,7 @@ h2:
     enabled: false
     path: /h2-console
 
-# SQL初始化已禁用，使用统一SQL文件 hrms_complete.sql
-
-# MyBatis Plus配置
+# MyBatis Plus 配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

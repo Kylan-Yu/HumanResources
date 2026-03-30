@@ -33,7 +33,7 @@ spring:
             - Path=/users/**,/user/**,/roles/**,/menus/**,/dicts/**,/org/**,/dept/**,/position/**,/rank/**,/employees/**,/employee-changes/**,/recruit-requirements/**,/payroll-standards/**,/performance/**,/training/**,/attendance/**,/contracts/**,/notices/**,/workflow/**,/leave-applications/**,/patch-applications/**,/overtime-applications/**,/applications/**
 
   redis:
-    host: localhost
+    host: 192.168.15.100
     port: 6379
     password:
     database: 0

@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/error",
                                 "/actuator/**",
                                 "/doc.html",
                                 "/swagger-ui/**",
